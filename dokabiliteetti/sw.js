@@ -1,9 +1,10 @@
-var CACHE_NAME = "dokabiliteetti-v1";
+var CACHE_NAME = "dokabiliteetti-v2";
 var ASSETS = [
   "./",
   "./index.html",
   "./styles.css",
   "./app.js",
+  "./firebase-config.js",
   "./manifest.json",
   "./icon-192.png",
   "./icon-512.png"
@@ -32,6 +33,8 @@ self.addEventListener("activate", function (event) {
 
 self.addEventListener("fetch", function (event) {
   if (event.request.method !== "GET") return;
+  // Älä välimuistita Firebase/Firestore-pyyntöjä - ne pitää aina hakea tuoreena
+  if (event.request.url.indexOf(self.location.origin) !== 0) return;
   event.respondWith(
     caches.match(event.request).then(function (cached) {
       return cached || fetch(event.request).then(function (response) {
