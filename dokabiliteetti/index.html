@@ -3,20 +3,108 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Dokabiliteetti</title>
-<meta name="description" content="Laske ja vertaa juomien hinta-alkoholisuhdetta.">
+<title>Dokabiliteetti &ndash; laske juomien hinta-alkoholisuhde</title>
+<meta name="description" content="Laske ja vertaa juomien dokabiliteettia (hinta suhteessa alkoholimäärään). Jaettu, ilmainen työkalu opiskelijabileisiin: hintaindeksi, boolilaskuri ja reseptit.">
+<link rel="canonical" href="https://dokabiliteetti.site/">
 <meta name="theme-color" content="#0F6E56">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Dokabiliteetti">
+<meta property="og:title" content="Dokabiliteetti – laske juomien hinta-alkoholisuhde">
+<meta property="og:description" content="Jaettu, ilmainen työkalu: vertaa juomien hintaa alkoholimäärään, laske boolireseptit ja katso yhteisön hintaindeksi.">
+<meta property="og:url" content="https://dokabiliteetti.site/">
+<meta property="og:image" content="https://dokabiliteetti.site/icon-512.png">
+<meta property="og:locale" content="fi_FI">
+
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Dokabiliteetti – laske juomien hinta-alkoholisuhde">
+<meta name="twitter:description" content="Jaettu, ilmainen työkalu: vertaa juomien hintaa alkoholimäärään, laske boolireseptit ja katso yhteisön hintaindeksi.">
+<meta name="twitter:image" content="https://dokabiliteetti.site/icon-512.png">
+
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Dokabiliteetti">
+<link rel="preconnect" href="https://www.gstatic.com">
+<link rel="preconnect" href="https://firestore.googleapis.com">
 <link rel="stylesheet" href="styles.css">
 <meta name="google-adsense-account" content="ca-pub-6383068358822889">
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6383068358822889" crossorigin="anonymous"></script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Dokabiliteetti",
+  "url": "https://dokabiliteetti.site/",
+  "description": "Jaettu, ilmainen työkalu juomien hinta-alkoholisuhteen (dokabiliteetin) laskemiseen ja vertailuun.",
+  "applicationCategory": "LifestyleApplication",
+  "operatingSystem": "Any",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "EUR"
+  },
+  "inLanguage": "fi"
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Mikä on dokabiliteetti?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Dokabiliteetti kertoo, kuinka paljon puhdasta alkoholia saat rahoillesi. Se lasketaan kaavalla (juoman koko millilitroina × alkoholiprosentti) jaettuna hinnalla euroina."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Miten boolilaskuri toimii?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Boolilaskurilla voit sekoittaa useita ainesosia ja laskea sekoituksen lopullisen alkoholiprosentin, kokonaishinnan ja annosmäärän automaattisesti."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Mistä hintaindeksin tiedot tulevat?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Kaikki hinnat ja tiedot ovat sovelluksen käyttäjien itse lisäämiä, ja hintaindeksi päivittyy reaaliajassa yhteisön syöttämästä datasta."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Onko sovellus ilmainen ja tarvitseeko rekisteröityä?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Sovellus on täysin ilmainen eikä vaadi kirjautumista tai rekisteröitymistä."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Voiko sovelluksen asentaa puhelimeen?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Kyllä, Dokabiliteetti toimii asennettavana verkkosovelluksena (PWA) ja voidaan lisätä puhelimen aloitusnäytölle suoraan selaimesta."
+      }
+    }
+  ]
+}
+</script>
 </head>
 <body>
+
+<noscript>
+  <p style="padding:1rem; text-align:center;">Dokabiliteetti vaatii JavaScriptin toimiakseen. Ota JavaScript k&auml;ytt&ouml;&ouml;n selaimestasi n&auml;hd&auml;ksesi hintaindeksin ja laskurit.</p>
+</noscript>
 
 <a href="#lisaa-form" class="skip-link">Siirry sis&auml;lt&ouml;&ouml;n</a>
 
@@ -142,6 +230,35 @@
 
     <h2 class="section-title">Kaupoittain: keskimääräinen dokabiliteetti</h2>
     <div id="hintaindeksi-kaupat"></div>
+  </section>
+
+  <section id="faq" class="faq-section" aria-label="Usein kysytyt kysymykset">
+    <h2 class="section-title">Usein kysytyt kysymykset</h2>
+
+    <details>
+      <summary>Mik&auml;&auml; on dokabiliteetti?</summary>
+      <p>Dokabiliteetti kertoo, kuinka paljon puhdasta alkoholia saat rahoillesi. Se lasketaan kaavalla (juoman koko millilitroina &times; alkoholiprosentti) jaettuna hinnalla euroina. Mit&auml; suurempi luku, sit&auml; parempi hinta-alkoholisuhde juomalla on.</p>
+    </details>
+
+    <details>
+      <summary>Miten boolilaskuri toimii?</summary>
+      <p>Boolilaskurilla voit sekoittaa useita ainesosia (esim. viini&auml;, siideri&auml; ja mehua) ja laskea sekoituksen lopullisen alkoholiprosentin, kokonaishinnan ja annosm&auml;&auml;r&auml;n. Tulokset p&auml;ivittyv&auml;t automaattisesti sit&auml; mukaa kun lis&auml;&auml;t ainesosia.</p>
+    </details>
+
+    <details>
+      <summary>Mist&auml; hintaindeksin tiedot tulevat?</summary>
+      <p>Kaikki hinnat ja tiedot ovat sovelluksen k&auml;ytt&auml;jien itse lis&auml;&auml;mi&auml;. Hintaindeksi ei ole toimituksellinen tai virallinen tilasto, vaan suoraan yhteis&ouml;n yll&auml;pit&auml;m&auml; jaettu lista, joka p&auml;ivittyy reaaliajassa.</p>
+    </details>
+
+    <details>
+      <summary>Onko sovellus ilmainen ja tarvitseeko rekister&ouml;ity&auml;?</summary>
+      <p>Kyll&auml;, sovellus on t&auml;ysin ilmainen eik&auml; vaadi kirjautumista tai rekister&ouml;itymist&auml;. Juomien ja reseptien lis&auml;&auml;minen sek&auml; hintaindeksin katsominen onnistuu suoraan selaimessa.</p>
+    </details>
+
+    <details>
+      <summary>Voiko sovelluksen asentaa puhelimeen?</summary>
+      <p>Kyll&auml;. Dokabiliteetti toimii asennettavana verkkosovelluksena (PWA): avaa sivu puhelimen selaimessa ja valitse "Lis&auml;&auml; aloitusn&auml;yt&ouml;lle", niin sovellus toimii kuin mik&auml; tahansa asennettu appi, my&ouml;s ilman nettiyhteytt&auml;.</p>
+    </details>
   </section>
 </main>
 

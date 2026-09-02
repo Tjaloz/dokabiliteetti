@@ -907,20 +907,39 @@ if ("serviceWorker" in navigator) {
 }
 
 // ---- Välilehdet ----
+var TAB_OTSIKOT = {
+  doka: "Dokabiliteetti – laske juomien hinta-alkoholisuhde",
+  booli: "Boolilaskuri – Dokabiliteetti",
+  hinta: "Hintaindeksi – Dokabiliteetti"
+};
+
+function vaihdaValilehti(tab, paivitaHash) {
+  if (!TAB_OTSIKOT[tab]) tab = "doka";
+  Array.prototype.forEach.call(tabBtns, function (b) {
+    var onAktiivinen = b.getAttribute("data-tab") === tab;
+    b.classList.toggle("active", onAktiivinen);
+    b.setAttribute("aria-selected", String(onAktiivinen));
+  });
+  dokaNakymaEl.hidden = tab !== "doka";
+  booliNakymaEl.hidden = tab !== "booli";
+  hintaNakymaEl.hidden = tab !== "hinta";
+  document.title = TAB_OTSIKOT[tab];
+  if (paivitaHash) {
+    history.replaceState(null, "", tab === "doka" ? "#" : "#" + tab);
+  }
+}
+
 Array.prototype.forEach.call(tabBtns, function (btn) {
   btn.addEventListener("click", function () {
-    Array.prototype.forEach.call(tabBtns, function (b) {
-      b.classList.remove("active");
-      b.setAttribute("aria-selected", "false");
-    });
-    btn.classList.add("active");
-    btn.setAttribute("aria-selected", "true");
-    var tab = btn.getAttribute("data-tab");
-    dokaNakymaEl.hidden = tab !== "doka";
-    booliNakymaEl.hidden = tab !== "booli";
-    hintaNakymaEl.hidden = tab !== "hinta";
+    vaihdaValilehti(btn.getAttribute("data-tab"), true);
   });
 });
+
+window.addEventListener("hashchange", function () {
+  vaihdaValilehti(location.hash.replace("#", "") || "doka", false);
+});
+
+vaihdaValilehti(location.hash.replace("#", "") || "doka", false);
 
 // ---- Boolilaskuri ----
 var booliAinesosat = [

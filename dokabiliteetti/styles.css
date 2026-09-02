@@ -912,3 +912,30 @@ footer p {
   padding: 8px 10px;
   background: var(--card);
 }
+
+.faq-section {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.faq-section details {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  background: var(--card);
+}
+
+.faq-section summary {
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.faq-section details p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 8px 0 2px;
+}
