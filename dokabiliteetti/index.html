@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dokabiliteetti</title>
+<meta name="description" content="Laske ja vertaa juomien hinta-alkoholisuhdetta.">
+<meta name="theme-color" content="#0F6E56">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Dokabiliteetti">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header>
+  <h1>Dokabiliteetti</h1>
+  <p class="subtitle">Kuinka paljon alkoholia saat rahoillesi</p>
+</header>
+
+<main>
+  <form id="lisaa-form" autocomplete="off">
+    <label for="nimi">Juoman nimi</label>
+    <input type="text" id="nimi" placeholder="esim. Karhu III">
+
+    <div class="grid-2">
+      <div>
+        <label for="hinta">Hinta (&euro;)</label>
+        <input type="number" id="hinta" inputmode="decimal" min="0" step="0.01" placeholder="3.50">
+      </div>
+      <div>
+        <label for="koko">Koko (ml)</label>
+        <input type="number" id="koko" inputmode="decimal" min="0" step="1" placeholder="330">
+      </div>
+    </div>
+
+    <label for="prosentti">Alkoholi (%)</label>
+    <input type="number" id="prosentti" inputmode="decimal" min="0" step="0.1" placeholder="4.6">
+
+    <p id="error-msg" class="error" hidden></p>
+
+    <button type="submit" id="lisaa-btn">Lis&auml;&auml; juoma</button>
+  </form>
+
+  <div id="toolbar" class="toolbar" hidden>
+    <span id="maara-teksti"></span>
+    <button id="tyhjenna-btn" class="ghost">Tyhjenn&auml; kaikki</button>
+  </div>
+
+  <div id="tulokset"></div>
+</main>
+
+<footer>
+  <p>Dokabiliteetti = (koko&nbsp;ml &times; alkoholi-%) / hinta&nbsp;&euro;. Isompi luku = parempi diili. Tiedot tallentuvat vain t&auml;h&auml;n laitteeseen.</p>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
