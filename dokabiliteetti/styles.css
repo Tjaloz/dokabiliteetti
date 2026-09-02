@@ -677,3 +677,97 @@ footer p {
 .booli-tulos-rivi.highlight strong {
   color: var(--accent-text);
 }
+
+.section-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 1.25rem 0 0.5rem;
+}
+
+.resepti-tallennus {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.resepti-tallennus input {
+  height: 44px;
+}
+
+.resepti-tallennus button {
+  height: 46px;
+}
+
+.resepti-kortti {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 10px;
+}
+
+.resepti-kortti-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.resepti-nimi {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.resepti-meta {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.resepti-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.resepti-actions button {
+  height: 34px;
+  font-size: 12px;
+  padding: 0 12px;
+  flex: 1;
+}
+
+.tilastot-paneeli {
+  max-width: 420px;
+  margin: 0.75rem auto 0;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  text-align: left;
+}
+
+.tilastot-rivi {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+
+.tilastot-rivi:last-child {
+  border-bottom: none;
+}
+
+.tilastot-otsikko {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin: 10px 0 2px;
+}
+
+.tilastot-otsikko:first-child {
+  margin-top: 0;
+}

@@ -27,6 +27,8 @@ var db = getFirestore(app);
 var auth = getAuth(app);
 var juomatCol = collection(db, "juomat");
 var juomatQuery = query(juomatCol, orderBy("luotu", "desc"));
+var reseptitCol = collection(db, "boolireseptit");
+var reseptitQuery = query(reseptitCol, orderBy("luotu", "desc"));
 
 var form = document.getElementById("lisaa-form");
 var nimiEl = document.getElementById("nimi");
@@ -70,6 +72,13 @@ var booliNakymaEl = document.getElementById("booli-nakyma");
 var ainesosatEl = document.getElementById("ainesosat");
 var lisaaAinesosaBtn = document.getElementById("lisaa-ainesosa-btn");
 var booliTulosEl = document.getElementById("booli-tulos");
+var reseptiNimiEl = document.getElementById("resepti-nimi");
+var tallennaReseptiBtn = document.getElementById("tallenna-resepti-btn");
+var reseptiVirheEl = document.getElementById("resepti-virhe");
+var reseptitEl = document.getElementById("reseptit");
+
+var tilastotToggle = document.getElementById("tilastot-toggle");
+var tilastotPaneeliEl = document.getElementById("tilastot-paneeli");
 
 var KAUPAT = ["Alko", "Prisma", "S-market", "Alepa/Sale", "K-citymarket", "K-market", "K-supermarket", "Ulkomaat", "Muu"];
 var OMA_NIMI_AVAIN = "dokabiliteetti-oma-nimi";
@@ -340,15 +349,42 @@ onSnapshot(
         historia: data.historia || [],
         peukut: data.peukut || 0,
         kommentit: data.kommentit || [],
-        viivakoodi: data.viivakoodi || null
+        viivakoodi: data.viivakoodi || null,
+        luotu: data.luotu && data.luotu.toDate ? data.luotu.toDate() : null
       };
     });
     render();
+    if (!tilastotPaneeliEl.hidden) renderaaTilastot();
   },
   function (err) {
     console.error("Firestore-yhteysvirhe", err);
     yhteysVirhe = true;
     render();
+  }
+);
+
+var booliReseptit = [];
+
+onSnapshot(
+  reseptitQuery,
+  function (snapshot) {
+    booliReseptit = snapshot.docs.map(function (d) {
+      var data = d.data();
+      return {
+        id: d.id,
+        nimi: data.nimi,
+        ainesosat: data.ainesosat || [],
+        kokonaistilavuus: data.kokonaistilavuus || 0,
+        lopullinenProsentti: data.lopullinenProsentti || 0,
+        kokonaishinta: data.kokonaishinta || 0,
+        lisaaja: data.lisaaja || "Nimetön"
+      };
+    });
+    renderaaReseptit();
+  },
+  function (err) {
+    console.error("Boolireseptien haku epäonnistui", err);
+    reseptitEl.innerHTML = '<p class="empty-state">Reseptejä ei voitu hakea.</p>';
   }
 );
 
@@ -709,7 +745,10 @@ onAuthStateChanged(auth, function (user) {
   adminToggle.hidden = onAdmin;
   adminForm.hidden = true;
   adminLogout.hidden = !onAdmin;
+  tilastotToggle.hidden = !onAdmin;
+  if (!onAdmin) tilastotPaneeliEl.hidden = true;
   render();
+  renderaaReseptit();
 });
 
 render();
@@ -827,3 +866,178 @@ lisaaAinesosaBtn.addEventListener("click", function () {
 
 renderaaAinesosat();
 laskeJaNaytaBooliTulos();
+
+// ---- Boolireseptien tallennus ja jako ----
+function renderaaReseptit() {
+  if (booliReseptit.length === 0) {
+    reseptitEl.innerHTML = '<p class="empty-state">Ei vielä tallennettuja reseptejä.</p>';
+    return;
+  }
+  reseptitEl.innerHTML = booliReseptit.map(function (r) {
+    var ainesLista = r.ainesosat.map(function (a) { return a.nimi || "Nimetön"; }).join(", ");
+    return '<div class="resepti-kortti">' +
+      '<div class="resepti-kortti-top"><span class="resepti-nimi">' + escapeHtml(r.nimi) + "</span></div>" +
+      '<div class="resepti-meta">' + pyorista(r.kokonaistilavuus, 2) + " l · " + pyorista(r.lopullinenProsentti, 1) + " % · " + pyorista(r.kokonaishinta, 2).toFixed(2) + " € · lisäsi " + escapeHtml(r.lisaaja) + "<br>" + escapeHtml(ainesLista) + "</div>" +
+      '<div class="resepti-actions">' +
+        '<button type="button" class="ghost" data-action="lataa-resepti" data-id="' + r.id + '">K&auml;yt&auml; t&auml;t&auml;</button>' +
+        (onAdmin ? '<button type="button" class="ghost" data-action="poista-resepti" data-id="' + r.id + '">Poista</button>' : "") +
+      "</div>" +
+    "</div>";
+  }).join("");
+}
+
+reseptitEl.addEventListener("click", function (e) {
+  var btn = e.target.closest("button[data-action]");
+  if (!btn) return;
+  var action = btn.getAttribute("data-action");
+  var id = btn.getAttribute("data-id");
+  var resepti = booliReseptit.find(function (r) { return r.id === id; });
+  if (!resepti) return;
+
+  if (action === "lataa-resepti") {
+    booliAinesosat = resepti.ainesosat.map(function (a) {
+      return { nimi: a.nimi || "", tilavuus: a.tilavuus != null ? String(a.tilavuus) : "", prosentti: a.prosentti != null ? String(a.prosentti) : "", hinta: a.hinta != null ? String(a.hinta) : "" };
+    });
+    if (booliAinesosat.length === 0) booliAinesosat = [{ nimi: "", tilavuus: "", prosentti: "", hinta: "" }];
+    renderaaAinesosat();
+    laskeJaNaytaBooliTulos();
+    reseptiNimiEl.value = resepti.nimi;
+  } else if (action === "poista-resepti") {
+    if (!onAdmin) return;
+    deleteDoc(doc(db, "boolireseptit", id)).catch(function (e2) {
+      console.error("Reseptin poisto epäonnistui", e2);
+      alert("Poisto ei onnistunut.");
+    });
+  }
+});
+
+tallennaReseptiBtn.addEventListener("click", function () {
+  reseptiVirheEl.hidden = true;
+
+  var reseptinNimi = reseptiNimiEl.value.trim();
+  if (!reseptinNimi) {
+    reseptiVirheEl.textContent = "Anna reseptille nimi.";
+    reseptiVirheEl.hidden = false;
+    return;
+  }
+
+  var kelvolliset = booliAinesosat.filter(function (a) { return parseFloat(a.tilavuus) > 0; });
+  if (kelvolliset.length === 0) {
+    reseptiVirheEl.textContent = "Lisää ainakin yksi ainesosa, jolla on tilavuus litroina.";
+    reseptiVirheEl.hidden = false;
+    return;
+  }
+
+  var kokonaistilavuus = 0;
+  var kokonaisAlkoholiLitroina = 0;
+  var kokonaishinta = 0;
+  var ainesosatData = kelvolliset.map(function (a) {
+    var l = parseFloat(a.tilavuus) || 0;
+    var p = parseFloat(a.prosentti) || 0;
+    var h = parseFloat(a.hinta) || 0;
+    kokonaistilavuus += l;
+    kokonaisAlkoholiLitroina += l * (p / 100);
+    kokonaishinta += h;
+    return { nimi: (a.nimi || "Nimetön").trim().slice(0, 40), tilavuus: l, prosentti: p, hinta: h };
+  });
+  var lopullinenProsentti = kokonaistilavuus > 0 ? (kokonaisAlkoholiLitroina / kokonaistilavuus) * 100 : 0;
+  var lisaaja = lisaajaEl.value.trim().slice(0, 40) || "Nimetön";
+
+  tallennaReseptiBtn.disabled = true;
+
+  var uusiReseptiRef = doc(reseptitCol);
+  var rateRef = doc(db, "ratelimits", deviceId);
+  var batch = writeBatch(db);
+
+  batch.set(uusiReseptiRef, {
+    nimi: reseptinNimi.slice(0, 60),
+    ainesosat: ainesosatData,
+    kokonaistilavuus: kokonaistilavuus,
+    lopullinenProsentti: lopullinenProsentti,
+    kokonaishinta: kokonaishinta,
+    lisaaja: lisaaja,
+    deviceId: deviceId,
+    luotu: serverTimestamp()
+  });
+  batch.set(rateRef, { viimeisin: serverTimestamp() });
+
+  batch.commit().then(function () {
+    reseptiNimiEl.value = "";
+  }).catch(function (e) {
+    console.error("Reseptin tallennus epäonnistui", e);
+    if (e && e.code === "permission-denied") {
+      reseptiVirheEl.textContent = "Tallennat liian nopeasti peräkkäin — odota hetki ja yritä uudelleen.";
+    } else {
+      reseptiVirheEl.textContent = "Tallennus epäonnistui. Tarkista nettiyhteys ja yritä uudelleen.";
+    }
+    reseptiVirheEl.hidden = false;
+  }).finally(function () {
+    tallennaReseptiBtn.disabled = false;
+  });
+});
+
+// ---- Ylläpitäjän tilastonäkymä ----
+function renderaaTilastot() {
+  if (!onAdmin) {
+    tilastotPaneeliEl.innerHTML = "";
+    return;
+  }
+
+  var nyt = Date.now();
+  var viikkoSitten = nyt - 7 * 24 * 60 * 60 * 1000;
+  var uusiaViikossa = juomat.filter(function (j) { return j.luotu && j.luotu.getTime() > viikkoSitten; }).length;
+
+  var lisaajaLaskuri = {};
+  var kauppaLaskuri = {};
+  var peukutYhteensa = 0;
+  var kommenttejaYhteensa = 0;
+
+  juomat.forEach(function (j) {
+    var nimi = (j.lisaaja || "Nimetön").trim() || "Nimetön";
+    lisaajaLaskuri[nimi] = (lisaajaLaskuri[nimi] || 0) + 1;
+    var kauppa = j.kauppa || "Muu";
+    kauppaLaskuri[kauppa] = (kauppaLaskuri[kauppa] || 0) + 1;
+    peukutYhteensa += j.peukut || 0;
+    kommenttejaYhteensa += (j.kommentit || []).length;
+  });
+
+  var topLisaajat = Object.keys(lisaajaLaskuri).sort(function (a, b) {
+    return lisaajaLaskuri[b] - lisaajaLaskuri[a];
+  }).slice(0, 10);
+
+  var topKaupat = Object.keys(kauppaLaskuri).sort(function (a, b) {
+    return kauppaLaskuri[b] - kauppaLaskuri[a];
+  });
+
+  var html = "";
+  html += '<div class="tilastot-rivi"><span>Juomia yhteensä</span><strong>' + juomat.length + "</strong></div>";
+  html += '<div class="tilastot-rivi"><span>Lisätty viim. 7 vrk</span><strong>' + uusiaViikossa + "</strong></div>";
+  html += '<div class="tilastot-rivi"><span>Vahvistuksia yhteensä</span><strong>' + peukutYhteensa + "</strong></div>";
+  html += '<div class="tilastot-rivi"><span>Kommentteja yhteensä</span><strong>' + kommenttejaYhteensa + "</strong></div>";
+  html += '<div class="tilastot-rivi"><span>Tallennettuja reseptejä</span><strong>' + booliReseptit.length + "</strong></div>";
+
+  html += '<div class="tilastot-otsikko">Aktiivisimmat lisääjät</div>';
+  if (topLisaajat.length === 0) {
+    html += '<div class="tilastot-rivi"><span>Ei vielä dataa</span></div>';
+  } else {
+    topLisaajat.forEach(function (nimi) {
+      html += '<div class="tilastot-rivi"><span>' + escapeHtml(nimi) + "</span><strong>" + lisaajaLaskuri[nimi] + "</strong></div>";
+    });
+  }
+
+  html += '<div class="tilastot-otsikko">Suosituimmat kaupat</div>';
+  if (topKaupat.length === 0) {
+    html += '<div class="tilastot-rivi"><span>Ei vielä dataa</span></div>';
+  } else {
+    topKaupat.forEach(function (kauppa) {
+      html += '<div class="tilastot-rivi"><span>' + escapeHtml(kauppa) + "</span><strong>" + kauppaLaskuri[kauppa] + "</strong></div>";
+    });
+  }
+
+  tilastotPaneeliEl.innerHTML = html;
+}
+
+tilastotToggle.addEventListener("click", function () {
+  tilastotPaneeliEl.hidden = !tilastotPaneeliEl.hidden;
+  if (!tilastotPaneeliEl.hidden) renderaaTilastot();
+});
