@@ -13,8 +13,12 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Dokabiliteetti">
 <link rel="stylesheet" href="styles.css">
+<meta name="google-adsense-account" content="ca-pub-6383068358822889">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6383068358822889" crossorigin="anonymous"></script>
 </head>
 <body>
+
+<a href="#lisaa-form" class="skip-link">Siirry sis&auml;lt&ouml;&ouml;n</a>
 
 <header>
   <h1>Dokabiliteetti</h1>
@@ -22,9 +26,18 @@
 </header>
 
 <main>
+  <nav class="tabs" role="tablist" aria-label="Laskurin valinta">
+    <button type="button" class="tab-btn active" data-tab="doka" role="tab" aria-selected="true">Dokabiliteetti</button>
+    <button type="button" class="tab-btn" data-tab="booli" role="tab" aria-selected="false">Boolilaskuri</button>
+  </nav>
+
+  <section id="doka-nakyma">
   <form id="lisaa-form" autocomplete="off">
     <label for="nimi">Juoman nimi</label>
-    <input type="text" id="nimi" placeholder="esim. Karhu III">
+    <div class="nimi-row">
+      <input type="text" id="nimi" placeholder="esim. Karhu III">
+      <button type="button" id="skannaa-btn" class="ghost scan-btn" hidden>&#128247;</button>
+    </div>
 
     <div class="grid-2">
       <div>
@@ -40,22 +53,92 @@
     <label for="prosentti">Alkoholi (%)</label>
     <input type="number" id="prosentti" inputmode="decimal" min="0" step="0.1" placeholder="4.6">
 
+    <label for="kauppa">Kauppa</label>
+    <select id="kauppa">
+      <option value="Alko">Alko</option>
+      <option value="Prisma">Prisma</option>
+      <option value="S-market">S-market</option>
+      <option value="Alepa/Sale">Alepa/Sale</option>
+      <option value="K-citymarket">K-citymarket</option>
+      <option value="K-market">K-market</option>
+      <option value="K-supermarket">K-supermarket</option>
+      <option value="Ulkomaat">Ulkomaat</option>
+      <option value="Muu">Muu</option>
+    </select>
+
+    <label for="lisaaja">Nimesi (valinnainen)</label>
+    <input type="text" id="lisaaja" placeholder="esim. Matti">
+
     <p id="error-msg" class="error" hidden></p>
+
+    <div id="duplikaatti-varoitus" class="dup-warning" hidden>
+      <p id="duplikaatti-teksti"></p>
+      <div class="dup-actions">
+        <button type="button" id="duplikaatti-paivita">P&auml;ivit&auml; olemassa oleva</button>
+        <button type="button" id="duplikaatti-ohita" class="ghost">Lis&auml;&auml; silti uutena</button>
+      </div>
+    </div>
 
     <button type="submit" id="lisaa-btn">Lis&auml;&auml; juoma</button>
   </form>
 
-  <div id="toolbar" class="toolbar" hidden>
+  <div id="kunniamaininta" class="leaderboard" hidden></div>
+
+  <div class="toolbar" hidden id="toolbar">
     <span id="maara-teksti"></span>
-    <button id="tyhjenna-btn" class="ghost">Tyhjenn&auml; kaikki</button>
+    <button id="tyhjenna-btn" class="ghost" hidden>Tyhjenn&auml;&nbsp;kaikki</button>
+  </div>
+
+  <input type="search" id="haku" class="search-input" placeholder="Hae juoman nimell&auml;&hellip;">
+
+  <div class="filters-row">
+    <div id="suodattimet" class="filters"></div>
+    <button id="suosikit-toggle" class="filter-chip fav-toggle" type="button">&#9733; Suosikit</button>
   </div>
 
   <div id="tulokset"></div>
+
+  <div class="ad-slot">
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-6383068358822889"
+         data-ad-slot="TÄYTÄ_TÄHÄN"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+  </div>
+  </section>
+
+  <section id="booli-nakyma" hidden>
+    <p class="subtitle">Sekoita boolisi ainesosat ja laske lopputuloksen vahvuus, hinta ja dokabiliteetti.</p>
+
+    <div id="ainesosat"></div>
+
+    <button type="button" id="lisaa-ainesosa-btn" class="ghost add-ainesosa-btn">+ Lis&auml;&auml; ainesosa</button>
+
+    <div id="booli-tulos" class="booli-tulos"></div>
+  </section>
 </main>
 
 <footer>
   <p>Dokabiliteetti = (koko&nbsp;ml &times; alkoholi-%) / hinta&nbsp;&euro;. Isompi luku = parempi diili. Lista on jaettu &ndash; kaikki sovellusta k&auml;ytt&auml;v&auml;t n&auml;kev&auml;t samat juomat.</p>
+
+  <button id="admin-toggle" class="link-btn">Yll&auml;pito</button>
+
+  <form id="admin-form" class="admin-form" hidden autocomplete="off">
+    <input type="email" id="admin-email" placeholder="S&auml;hk&ouml;posti" autocomplete="username">
+    <input type="password" id="admin-salasana" placeholder="Salasana" autocomplete="current-password">
+    <button type="submit">Kirjaudu</button>
+    <p id="admin-virhe" class="error" hidden></p>
+  </form>
+
+  <button id="admin-logout" class="link-btn" hidden>Kirjaudu ulos (yll&auml;pit&auml;j&auml;n&auml;)</button>
 </footer>
+
+<div id="skanneri" class="scanner-overlay" hidden>
+  <video id="skanneri-video" autoplay playsinline muted></video>
+  <p id="skanneri-status" aria-live="polite"></p>
+  <button type="button" id="skanneri-sulje">Sulje</button>
+</div>
 
 <script type="module" src="app.js"></script>
 </body>
