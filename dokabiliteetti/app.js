@@ -13,7 +13,8 @@ import {
   serverTimestamp,
   arrayUnion,
   increment,
-  writeBatch
+  writeBatch,
+  enableIndexedDbPersistence
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
   getAuth,
@@ -29,6 +30,18 @@ var juomatCol = collection(db, "juomat");
 var juomatQuery = query(juomatCol, orderBy("luotu", "desc"));
 var reseptitCol = collection(db, "boolireseptit");
 var reseptitQuery = query(reseptitCol, orderBy("luotu", "desc"));
+
+enableIndexedDbPersistence(db).catch(function (err) {
+  console.warn("Offline-tuki ei käytössä tässä selaimessa:", err.code);
+});
+
+var offlineBanner = document.getElementById("offline-banner");
+function paivitaVerkkotila() {
+  offlineBanner.hidden = navigator.onLine;
+}
+window.addEventListener("online", paivitaVerkkotila);
+window.addEventListener("offline", paivitaVerkkotila);
+paivitaVerkkotila();
 
 var form = document.getElementById("lisaa-form");
 var nimiEl = document.getElementById("nimi");
@@ -544,24 +557,46 @@ function luoUusiJuoma(tiedot) {
   batch.set(uusiJuomaRef, data);
   batch.set(rateRef, { viimeisin: serverTimestamp() });
 
-  return batch.commit().then(function () {
+  var oliOffline = !navigator.onLine;
+
+  var commitPromise = batch.commit().then(function () {
+    if (!oliOffline) {
+      nimiEl.value = "";
+      hintaEl.value = "";
+      kokoEl.value = "";
+      prosenttiEl.value = "";
+      skannattuViivakoodi = null;
+      nimiEl.focus();
+    }
+  }).catch(function (e) {
+    console.error("Tallennus epäonnistui", e);
+    if (e && e.code === "permission-denied") {
+      errorEl.textContent = "Lisäys hylättiin (esim. liian nopea tahti). Tarkista tiedot ja yritä uudelleen.";
+      errorEl.hidden = false;
+    } else if (!navigator.onLine) {
+      // ei näytetä virhettä - jää odottamaan yhteyden palautumista
+    } else {
+      errorEl.textContent = "Tallennus epäonnistui. Tarkista nettiyhteys ja yritä uudelleen.";
+      errorEl.hidden = false;
+    }
+  }).finally(function () {
+    lisaaBtn.disabled = false;
+  });
+
+  if (oliOffline) {
+    // Firestore jonottaa kirjoituksen paikallisesti (IndexedDB) ja lähettää sen
+    // automaattisesti kun yhteys palaa - ei odoteta commit-lupausta UI:ssa.
+    errorEl.hidden = true;
     nimiEl.value = "";
     hintaEl.value = "";
     kokoEl.value = "";
     prosenttiEl.value = "";
     skannattuViivakoodi = null;
-    nimiEl.focus();
-  }).catch(function (e) {
-    console.error("Tallennus epäonnistui", e);
-    if (e && e.code === "permission-denied") {
-      errorEl.textContent = "Lisäät liian nopeasti peräkkäin — odota hetki ja yritä uudelleen.";
-    } else {
-      errorEl.textContent = "Tallennus epäonnistui. Tarkista nettiyhteys ja yritä uudelleen.";
-    }
-    errorEl.hidden = false;
-  }).finally(function () {
     lisaaBtn.disabled = false;
-  });
+    nimiEl.focus();
+  }
+
+  return commitPromise;
 }
 
 form.addEventListener("submit", function (e) {
@@ -786,16 +821,26 @@ Array.prototype.forEach.call(tabBtns, function (btn) {
 
 // ---- Boolilaskuri ----
 var booliAinesosat = [
-  { nimi: "", tilavuus: "", prosentti: "", hinta: "" },
-  { nimi: "", tilavuus: "", prosentti: "", hinta: "" }
+  { nimi: "", tilavuus: "", yksikko: "l", prosentti: "", hinta: "" },
+  { nimi: "", tilavuus: "", yksikko: "l", prosentti: "", hinta: "" }
 ];
+
+var YKSIKKOKERROIN = { l: 1, dl: 0.1, cl: 0.01 };
 
 function renderaaAinesosat() {
   ainesosatEl.innerHTML = booliAinesosat.map(function (a, i) {
+    var yksikko = a.yksikko || "l";
     return '<div class="ainesosa-rivi">' +
       '<input type="text" placeholder="esim. Valkoviini" value="' + escapeHtml(a.nimi) + '" data-idx="' + i + '" data-field="nimi" class="ainesosa-input" aria-label="Ainesosan nimi">' +
       '<div class="ainesosa-grid">' +
-        '<input type="number" placeholder="Litroja" step="0.01" min="0" inputmode="decimal" value="' + escapeHtml(a.tilavuus) + '" data-idx="' + i + '" data-field="tilavuus" class="ainesosa-input" aria-label="Tilavuus litroina">' +
+        '<div class="tilavuus-wrap">' +
+          '<input type="number" placeholder="M&auml;&auml;r&auml;" step="0.01" min="0" inputmode="decimal" value="' + escapeHtml(a.tilavuus) + '" data-idx="' + i + '" data-field="tilavuus" class="ainesosa-input" aria-label="M&auml;&auml;r&auml;">' +
+          '<select data-idx="' + i + '" data-field="yksikko" class="ainesosa-input" aria-label="Yksikk&ouml;">' +
+            '<option value="l"' + (yksikko === "l" ? " selected" : "") + '>l</option>' +
+            '<option value="dl"' + (yksikko === "dl" ? " selected" : "") + '>dl</option>' +
+            '<option value="cl"' + (yksikko === "cl" ? " selected" : "") + '>cl</option>' +
+          "</select>" +
+        "</div>" +
         '<input type="number" placeholder="Alkoholi %" step="0.1" min="0" inputmode="decimal" value="' + escapeHtml(a.prosentti) + '" data-idx="' + i + '" data-field="prosentti" class="ainesosa-input" aria-label="Alkoholiprosentti">' +
         '<input type="number" placeholder="Hinta €" step="0.01" min="0" inputmode="decimal" value="' + escapeHtml(a.hinta) + '" data-idx="' + i + '" data-field="hinta" class="ainesosa-input" aria-label="Hinta euroina">' +
         '<button type="button" class="ainesosa-poista" data-idx="' + i + '" aria-label="Poista ainesosa">&times;</button>' +
@@ -810,7 +855,7 @@ function laskeJaNaytaBooliTulos() {
   });
 
   if (kelvolliset.length === 0) {
-    booliTulosEl.innerHTML = '<p class="empty-state">Lisää ainakin yksi ainesosa, jolla on tilavuus litroina.</p>';
+    booliTulosEl.innerHTML = '<p class="empty-state">Lisää ainakin yksi ainesosa, jolla on määrä.</p>';
     return;
   }
 
@@ -819,7 +864,8 @@ function laskeJaNaytaBooliTulos() {
   var kokonaishinta = 0;
 
   kelvolliset.forEach(function (a) {
-    var l = parseFloat(a.tilavuus) || 0;
+    var kerroin = YKSIKKOKERROIN[a.yksikko] || 1;
+    var l = (parseFloat(a.tilavuus) || 0) * kerroin;
     var p = parseFloat(a.prosentti) || 0;
     var h = parseFloat(a.hinta) || 0;
     kokonaistilavuus += l;
@@ -860,7 +906,7 @@ ainesosatEl.addEventListener("click", function (e) {
 });
 
 lisaaAinesosaBtn.addEventListener("click", function () {
-  booliAinesosat.push({ nimi: "", tilavuus: "", prosentti: "", hinta: "" });
+  booliAinesosat.push({ nimi: "", tilavuus: "", yksikko: "l", prosentti: "", hinta: "" });
   renderaaAinesosat();
 });
 
@@ -896,9 +942,9 @@ reseptitEl.addEventListener("click", function (e) {
 
   if (action === "lataa-resepti") {
     booliAinesosat = resepti.ainesosat.map(function (a) {
-      return { nimi: a.nimi || "", tilavuus: a.tilavuus != null ? String(a.tilavuus) : "", prosentti: a.prosentti != null ? String(a.prosentti) : "", hinta: a.hinta != null ? String(a.hinta) : "" };
+      return { nimi: a.nimi || "", tilavuus: a.tilavuus != null ? String(a.tilavuus) : "", yksikko: "l", prosentti: a.prosentti != null ? String(a.prosentti) : "", hinta: a.hinta != null ? String(a.hinta) : "" };
     });
-    if (booliAinesosat.length === 0) booliAinesosat = [{ nimi: "", tilavuus: "", prosentti: "", hinta: "" }];
+    if (booliAinesosat.length === 0) booliAinesosat = [{ nimi: "", tilavuus: "", yksikko: "l", prosentti: "", hinta: "" }];
     renderaaAinesosat();
     laskeJaNaytaBooliTulos();
     reseptiNimiEl.value = resepti.nimi;
@@ -923,7 +969,7 @@ tallennaReseptiBtn.addEventListener("click", function () {
 
   var kelvolliset = booliAinesosat.filter(function (a) { return parseFloat(a.tilavuus) > 0; });
   if (kelvolliset.length === 0) {
-    reseptiVirheEl.textContent = "Lisää ainakin yksi ainesosa, jolla on tilavuus litroina.";
+    reseptiVirheEl.textContent = "Lisää ainakin yksi ainesosa, jolla on määrä.";
     reseptiVirheEl.hidden = false;
     return;
   }
@@ -932,7 +978,8 @@ tallennaReseptiBtn.addEventListener("click", function () {
   var kokonaisAlkoholiLitroina = 0;
   var kokonaishinta = 0;
   var ainesosatData = kelvolliset.map(function (a) {
-    var l = parseFloat(a.tilavuus) || 0;
+    var kerroin = YKSIKKOKERROIN[a.yksikko] || 1;
+    var l = (parseFloat(a.tilavuus) || 0) * kerroin;
     var p = parseFloat(a.prosentti) || 0;
     var h = parseFloat(a.hinta) || 0;
     kokonaistilavuus += l;

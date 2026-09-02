@@ -8,6 +8,7 @@ export const firebaseConfig = {
   messagingSenderId: "849464191592",
   appId: "1:849464191592:web:92334a56ca99760b3be9dd",
   measurementId: "G-GZHN2QSNYB"
+
 };
 
 // UID-tunnuksesi Firebase Authenticationista (Authentication -> Users -> User UID).
