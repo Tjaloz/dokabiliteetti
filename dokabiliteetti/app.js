@@ -12,6 +12,7 @@ import {
   orderBy,
   serverTimestamp,
   arrayUnion,
+  arrayRemove,
   increment,
   writeBatch,
   enableIndexedDbPersistence
@@ -30,6 +31,8 @@ var juomatCol = collection(db, "juomat");
 var juomatQuery = query(juomatCol, orderBy("luotu", "desc"));
 var reseptitCol = collection(db, "boolireseptit");
 var reseptitQuery = query(reseptitCol, orderBy("luotu", "desc"));
+var ilmoituksetCol = collection(db, "ilmoitukset");
+var ilmoituksetQuery = query(ilmoituksetCol, orderBy("luotu", "desc"));
 
 enableIndexedDbPersistence(db).catch(function (err) {
   console.warn("Offline-tuki ei käytössä tässä selaimessa:", err.code);
@@ -82,6 +85,7 @@ var dupOhitaBtn = document.getElementById("duplikaatti-ohita");
 var tabBtns = document.querySelectorAll(".tab-btn");
 var dokaNakymaEl = document.getElementById("doka-nakyma");
 var booliNakymaEl = document.getElementById("booli-nakyma");
+var hintaNakymaEl = document.getElementById("hinta-nakyma");
 var ainesosatEl = document.getElementById("ainesosat");
 var lisaaAinesosaBtn = document.getElementById("lisaa-ainesosa-btn");
 var booliTulosEl = document.getElementById("booli-tulos");
@@ -93,6 +97,13 @@ var reseptitEl = document.getElementById("reseptit");
 var tilastotToggle = document.getElementById("tilastot-toggle");
 var tilastotPaneeliEl = document.getElementById("tilastot-paneeli");
 
+var ilmoituksetToggle = document.getElementById("ilmoitukset-toggle");
+var ilmoituksetPaneeliEl = document.getElementById("ilmoitukset-paneeli");
+
+var hintaindeksiTilastotEl = document.getElementById("hintaindeksi-tilastot");
+var hintaindeksiTop10El = document.getElementById("hintaindeksi-top10");
+var hintaindeksiKaupatEl = document.getElementById("hintaindeksi-kaupat");
+
 var KAUPAT = ["Alko", "Prisma", "S-market", "Alepa/Sale", "K-citymarket", "K-market", "K-supermarket", "Ulkomaat", "Muu"];
 var OMA_NIMI_AVAIN = "dokabiliteetti-oma-nimi";
 var SUOSIKIT_AVAIN = "dokabiliteetti-suosikit";
@@ -103,6 +114,7 @@ var hakuTeksti = "";
 var naytaVainSuosikit = false;
 var avoinKommentit = {};
 var avoinHintaPaivitys = {};
+var avoinIlmoitus = {};
 
 var juomat = [];
 var yhteysVirhe = false;
@@ -243,6 +255,7 @@ function kortinHtml(j, onParas, suhde) {
   var onPeukutettu = !!peukutukset[j.id];
   var kommentitAuki = !!avoinKommentit[j.id];
   var hintaAuki = !!avoinHintaPaivitys[j.id];
+  var ilmoitusAuki = !!avoinIlmoitus[j.id];
   var kommentit = j.kommentit || [];
   var peukut = j.peukut || 0;
 
@@ -269,6 +282,7 @@ function kortinHtml(j, onParas, suhde) {
     '<button class="action-btn' + (onPeukutettu ? " active" : "") + '" data-action="peukku" data-id="' + j.id + '">' + peukkuTeksti + " (" + peukut + ")</button>" +
     '<button class="action-btn" data-action="toggle-kommentit" data-id="' + j.id + '">💬 Kommentit (' + kommentit.length + ")</button>" +
     '<button class="action-btn" data-action="toggle-hinta" data-id="' + j.id + '">✏️ Päivitä hinta</button>' +
+    '<button class="action-btn report-btn" data-action="toggle-ilmoitus" data-id="' + j.id + '">🚩 Ilmoita</button>' +
     "</div>";
 
   if (kommentitAuki) {
@@ -276,8 +290,11 @@ function kortinHtml(j, onParas, suhde) {
     if (kommentit.length === 0) {
       html += '<p class="kommentti-item" style="border:none; color:var(--text-muted);">Ei vielä kommentteja.</p>';
     } else {
-      kommentit.slice().reverse().forEach(function (k) {
-        html += '<div class="kommentti-item">' + escapeHtml(k.teksti) + '<span class="kommentti-pvm">' + escapeHtml(k.nimi || "Nimetön") + " · " + muotoilePvm(k.pvm) + "</span></div>";
+      kommentit.slice().reverse().forEach(function (k, ri) {
+        var alkuperainenIdx = kommentit.length - 1 - ri;
+        html += '<div class="kommentti-item">' + escapeHtml(k.teksti) +
+          '<span class="kommentti-pvm">' + escapeHtml(k.nimi || "Nimetön") + " · " + muotoilePvm(k.pvm) +
+          ' · <button type="button" class="kommentti-ilmoita-btn" data-action="ilmoita-kommentti" data-id="' + j.id + '" data-kidx="' + alkuperainenIdx + '">Ilmoita</button></span></div>';
       });
     }
     html += '<form class="kommentti-form" data-action="lisaa-kommentti" data-id="' + j.id + '">' +
@@ -291,6 +308,20 @@ function kortinHtml(j, onParas, suhde) {
       '<form class="hinta-form" data-action="paivita-hinta" data-id="' + j.id + '">' +
       '<input type="number" min="0.01" step="0.01" placeholder="Uusi hinta €" required>' +
       '<button type="submit">P&auml;ivit&auml;</button>' +
+      "</form></div>";
+  }
+
+  if (ilmoitusAuki) {
+    html += '<div class="ilmoitus-panel">' +
+      '<form class="ilmoitus-form" data-action="ilmoita-juoma" data-id="' + j.id + '">' +
+        '<select name="syy" aria-label="Ilmoituksen syy">' +
+          '<option value="Roskapostia">Roskapostia</option>' +
+          '<option value="Väärä hinta/tiedot">Väärä hinta/tiedot</option>' +
+          '<option value="Asiaton sisältö">Asiaton sisältö</option>' +
+          '<option value="Muu syy">Muu syy</option>' +
+        "</select>" +
+        '<input type="text" maxlength="200" placeholder="Lisätietoa (valinnainen)">' +
+        '<button type="submit">L&auml;het&auml; ilmoitus</button>' +
       "</form></div>";
   }
 
@@ -367,6 +398,7 @@ onSnapshot(
       };
     });
     render();
+    renderaaHintaindeksi();
     if (!tilastotPaneeliEl.hidden) renderaaTilastot();
   },
   function (err) {
@@ -709,6 +741,27 @@ tuloksetEl.addEventListener("click", function (e) {
   } else if (action === "toggle-hinta") {
     avoinHintaPaivitys[id] = !avoinHintaPaivitys[id];
     render();
+  } else if (action === "toggle-ilmoitus") {
+    avoinIlmoitus[id] = !avoinIlmoitus[id];
+    render();
+  } else if (action === "ilmoita-kommentti") {
+    if (!juoma) return;
+    var kidx = Number(btn.getAttribute("data-kidx"));
+    var kommenttiObjekti = (juoma.kommentit || [])[kidx];
+    if (!kommenttiObjekti) return;
+    btn.disabled = true;
+    btn.textContent = "Ilmoitettu";
+    laheteIlmoitus({
+      tyyppi: "kommentti",
+      kohdeId: id,
+      kommenttiObjekti: kommenttiObjekti,
+      syy: "Asiaton kommentti",
+      lisatiedot: ""
+    }).catch(function (e2) {
+      console.error("Ilmoitus epäonnistui", e2);
+      btn.disabled = false;
+      btn.textContent = "Ilmoita";
+    });
   }
 });
 
@@ -750,6 +803,25 @@ tuloksetEl.addEventListener("submit", function (e) {
       console.error("Hinnan päivitys epäonnistui", e2);
       alert("Hinnan päivitys ei onnistunut. Yritä uudelleen.");
     });
+  } else if (action === "ilmoita-juoma") {
+    e.preventDefault();
+    var syyEl = form2.querySelector("select[name=syy]");
+    var lisatietoEl = form2.querySelector("input[type=text]");
+    var submitBtn = form2.querySelector("button[type=submit]");
+    submitBtn.disabled = true;
+    laheteIlmoitus({
+      tyyppi: "juoma",
+      kohdeId: id,
+      syy: syyEl.value,
+      lisatiedot: lisatietoEl.value.trim().slice(0, 200)
+    }).then(function () {
+      delete avoinIlmoitus[id];
+      render();
+    }).catch(function (e2) {
+      console.error("Ilmoitus epäonnistui", e2);
+      alert("Ilmoituksen lähetys ei onnistunut. Yritä uudelleen.");
+      submitBtn.disabled = false;
+    });
   }
 });
 
@@ -775,6 +847,9 @@ adminLogout.addEventListener("click", function () {
   signOut(auth);
 });
 
+var ilmoitukset = [];
+var unsubIlmoitukset = null;
+
 onAuthStateChanged(auth, function (user) {
   onAdmin = !!user && user.uid === adminUid;
   adminToggle.hidden = onAdmin;
@@ -782,6 +857,33 @@ onAuthStateChanged(auth, function (user) {
   adminLogout.hidden = !onAdmin;
   tilastotToggle.hidden = !onAdmin;
   if (!onAdmin) tilastotPaneeliEl.hidden = true;
+
+  ilmoituksetToggle.hidden = !onAdmin;
+  if (onAdmin && !unsubIlmoitukset) {
+    unsubIlmoitukset = onSnapshot(ilmoituksetQuery, function (snapshot) {
+      ilmoitukset = snapshot.docs.map(function (d) {
+        var data = d.data();
+        return {
+          id: d.id,
+          tyyppi: data.tyyppi,
+          kohdeId: data.kohdeId,
+          kommenttiObjekti: data.kommenttiObjekti || null,
+          syy: data.syy,
+          lisatiedot: data.lisatiedot || ""
+        };
+      });
+      ilmoituksetToggle.textContent = "🚨 Ilmoitukset (" + ilmoitukset.length + ")";
+      if (!ilmoituksetPaneeliEl.hidden) renderaaIlmoitukset();
+    }, function (err) {
+      console.error("Ilmoitusten haku epäonnistui", err);
+    });
+  } else if (!onAdmin && unsubIlmoitukset) {
+    unsubIlmoitukset();
+    unsubIlmoitukset = null;
+    ilmoitukset = [];
+    ilmoituksetPaneeliEl.hidden = true;
+  }
+
   render();
   renderaaReseptit();
 });
@@ -816,6 +918,7 @@ Array.prototype.forEach.call(tabBtns, function (btn) {
     var tab = btn.getAttribute("data-tab");
     dokaNakymaEl.hidden = tab !== "doka";
     booliNakymaEl.hidden = tab !== "booli";
+    hintaNakymaEl.hidden = tab !== "hinta";
   });
 });
 
@@ -1088,3 +1191,129 @@ tilastotToggle.addEventListener("click", function () {
   tilastotPaneeliEl.hidden = !tilastotPaneeliEl.hidden;
   if (!tilastotPaneeliEl.hidden) renderaaTilastot();
 });
+
+// ---- Ilmoitusten lähetys (jaettu juoma- ja kommenttiraportoinnille) ----
+function laheteIlmoitus(tiedot) {
+  var uusiIlmoitusRef = doc(ilmoituksetCol);
+  var rateRef = doc(db, "ratelimits", deviceId);
+  var batch = writeBatch(db);
+
+  var data = {
+    tyyppi: tiedot.tyyppi,
+    kohdeId: tiedot.kohdeId,
+    syy: tiedot.syy,
+    lisatiedot: tiedot.lisatiedot || "",
+    deviceId: deviceId,
+    luotu: serverTimestamp()
+  };
+  if (tiedot.kommenttiObjekti) data.kommenttiObjekti = tiedot.kommenttiObjekti;
+
+  batch.set(uusiIlmoitusRef, data);
+  batch.set(rateRef, { viimeisin: serverTimestamp() });
+  return batch.commit();
+}
+
+// ---- Ylläpitäjän moderointijono ----
+function renderaaIlmoitukset() {
+  if (ilmoitukset.length === 0) {
+    ilmoituksetPaneeliEl.innerHTML = '<p class="empty-state">Ei avoimia ilmoituksia.</p>';
+    return;
+  }
+
+  ilmoituksetPaneeliEl.innerHTML = ilmoitukset.map(function (ilm) {
+    var kohdeKuvaus;
+    if (ilm.tyyppi === "kommentti" && ilm.kommenttiObjekti) {
+      kohdeKuvaus = 'Kommentti: "' + escapeHtml(ilm.kommenttiObjekti.teksti) + '" (' + escapeHtml(ilm.kommenttiObjekti.nimi || "Nimetön") + ")";
+    } else {
+      var kohdeJuoma = juomat.find(function (j) { return j.id === ilm.kohdeId; });
+      kohdeKuvaus = kohdeJuoma
+        ? "Juoma: " + escapeHtml(kohdeJuoma.nimi) + " (" + pyorista(kohdeJuoma.hinta, 2).toFixed(2) + " €, " + escapeHtml(kohdeJuoma.kauppa) + ")"
+        : "Juoma ei ole enää listalla (jo poistettu)";
+    }
+    return '<div class="ilmoitus-kortti">' +
+      '<div class="ilmoitus-kohde">' + kohdeKuvaus + "</div>" +
+      '<div class="ilmoitus-syy">Syy: ' + escapeHtml(ilm.syy) + (ilm.lisatiedot ? " — " + escapeHtml(ilm.lisatiedot) : "") + "</div>" +
+      '<div class="ilmoitus-actions">' +
+        '<button type="button" data-action="poista-sisalto" data-id="' + ilm.id + '">Poista sis&auml;lt&ouml;</button>' +
+        '<button type="button" class="ghost" data-action="hylkaa-ilmoitus" data-id="' + ilm.id + '">Hylk&auml;&auml;</button>' +
+      "</div>" +
+    "</div>";
+  }).join("");
+}
+
+ilmoituksetToggle.addEventListener("click", function () {
+  ilmoituksetPaneeliEl.hidden = !ilmoituksetPaneeliEl.hidden;
+  if (!ilmoituksetPaneeliEl.hidden) renderaaIlmoitukset();
+});
+
+ilmoituksetPaneeliEl.addEventListener("click", function (e) {
+  var btn = e.target.closest("button[data-action]");
+  if (!btn || !onAdmin) return;
+  var action = btn.getAttribute("data-action");
+  var id = btn.getAttribute("data-id");
+  var ilm = ilmoitukset.find(function (i) { return i.id === id; });
+  if (!ilm) return;
+
+  btn.disabled = true;
+
+  if (action === "hylkaa-ilmoitus") {
+    deleteDoc(doc(db, "ilmoitukset", id)).catch(function (e2) {
+      console.error("Ilmoituksen hylkäys epäonnistui", e2);
+      btn.disabled = false;
+    });
+  } else if (action === "poista-sisalto") {
+    var toimenpide;
+    if (ilm.tyyppi === "kommentti" && ilm.kommenttiObjekti) {
+      toimenpide = updateDoc(doc(db, "juomat", ilm.kohdeId), {
+        kommentit: arrayRemove(ilm.kommenttiObjekti)
+      });
+    } else {
+      toimenpide = deleteDoc(doc(db, "juomat", ilm.kohdeId));
+    }
+    toimenpide.then(function () {
+      return deleteDoc(doc(db, "ilmoitukset", id));
+    }).catch(function (e2) {
+      console.error("Sisällön poisto epäonnistui", e2);
+      alert("Poisto ei onnistunut. Tarkista Firestoren Rules-asetukset.");
+      btn.disabled = false;
+    });
+  }
+});
+
+// ---- Julkinen hintaindeksi ----
+function renderaaHintaindeksi() {
+  if (juomat.length === 0) {
+    hintaindeksiTilastotEl.innerHTML = "";
+    hintaindeksiTop10El.innerHTML = '<p class="empty-state">Ei vielä dataa.</p>';
+    hintaindeksiKaupatEl.innerHTML = "";
+    return;
+  }
+
+  hintaindeksiTilastotEl.innerHTML =
+    '<div class="tilastot-rivi"><span>Juomia indeksissä</span><strong>' + juomat.length + "</strong></div>" +
+    '<div class="tilastot-rivi"><span>P&auml;ivittyy</span><strong>reaaliajassa</strong></div>';
+
+  var top10 = juomat.slice().sort(function (a, b) {
+    return b.dokabiliteetti - a.dokabiliteetti;
+  }).slice(0, 10);
+
+  hintaindeksiTop10El.innerHTML = top10.map(function (j, i) {
+    return '<div class="booli-tulos-rivi"><span>' + (i + 1) + ". " + escapeHtml(j.nimi) + " (" + escapeHtml(j.kauppa) + ")</span><strong>" + pyorista(j.dokabiliteetti, 2) + "</strong></div>";
+  }).join("");
+
+  var kauppaSummat = {};
+  juomat.forEach(function (j) {
+    var k = j.kauppa || "Muu";
+    if (!kauppaSummat[k]) kauppaSummat[k] = { summa: 0, maara: 0 };
+    kauppaSummat[k].summa += j.dokabiliteetti;
+    kauppaSummat[k].maara += 1;
+  });
+  var kaupat = Object.keys(kauppaSummat).sort(function (a, b) {
+    return (kauppaSummat[b].summa / kauppaSummat[b].maara) - (kauppaSummat[a].summa / kauppaSummat[a].maara);
+  });
+
+  hintaindeksiKaupatEl.innerHTML = kaupat.map(function (k) {
+    var keskiarvo = kauppaSummat[k].summa / kauppaSummat[k].maara;
+    return '<div class="booli-tulos-rivi"><span>' + escapeHtml(k) + " (" + kauppaSummat[k].maara + " juomaa)</span><strong>" + pyorista(keskiarvo, 2) + "</strong></div>";
+  }).join("");
+}

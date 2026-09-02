@@ -31,6 +31,7 @@
   <nav class="tabs" role="tablist" aria-label="Laskurin valinta">
     <button type="button" class="tab-btn active" data-tab="doka" role="tab" aria-selected="true">Dokabiliteetti</button>
     <button type="button" class="tab-btn" data-tab="booli" role="tab" aria-selected="false">Boolilaskuri</button>
+    <button type="button" class="tab-btn" data-tab="hinta" role="tab" aria-selected="false">Hintaindeksi</button>
   </nav>
 
   <section id="doka-nakyma">
@@ -128,6 +129,20 @@
     <h2 class="section-title">Tallennetut reseptit</h2>
     <div id="reseptit"></div>
   </section>
+
+  <section id="hinta-nakyma" hidden>
+    <div class="hintaindeksi-intro">
+      <p>Dokabiliteetti-hintaindeksi lasketaan suoraan k&auml;ytt&auml;jien yll&auml; lis&auml;&auml;mist&auml; hinnoista kaavalla <strong>(koko&nbsp;ml &times; alkoholi-%) / hinta&nbsp;&euro;</strong>. Mit&auml; suurempi luku, sit&auml; enemm&auml;n puhdasta alkoholia saat jokaista euroa kohden. Indeksi p&auml;ivittyy automaattisesti aina kun joku lis&auml;&auml; tai p&auml;ivitt&auml;&auml; hinnan &ndash; se ei ole toimituksellinen arvio vaan suoraan yhteis&ouml;n keräämää dataa.</p>
+    </div>
+
+    <div id="hintaindeksi-tilastot" class="hintaindeksi-tilastot"></div>
+
+    <h2 class="section-title">Top 10 paras dokabiliteetti juuri nyt</h2>
+    <div id="hintaindeksi-top10"></div>
+
+    <h2 class="section-title">Kaupoittain: keskimääräinen dokabiliteetti</h2>
+    <div id="hintaindeksi-kaupat"></div>
+  </section>
 </main>
 
 <footer>
@@ -147,6 +162,9 @@
 
   <button id="tilastot-toggle" class="link-btn" hidden>&#128202; Tilastot</button>
   <div id="tilastot-paneeli" class="tilastot-paneeli" hidden></div>
+
+  <button id="ilmoitukset-toggle" class="link-btn" hidden>&#128680; Ilmoitukset</button>
+  <div id="ilmoitukset-paneeli" class="tilastot-paneeli" hidden></div>
 </footer>
 
 <div id="skanneri" class="scanner-overlay" hidden>

@@ -1,4 +1,4 @@
-var CACHE_NAME = "dokabiliteetti-v13";
+var CACHE_NAME = "dokabiliteetti-v14";
 var ASSETS = [
   "./",
   "./index.html",

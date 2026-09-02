@@ -824,3 +824,91 @@ footer p {
   text-align: center;
   padding: 8px 12px;
 }
+
+.ilmoitus-panel {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ilmoitus-form select,
+.ilmoitus-form input {
+  height: 38px;
+  font-size: 13px;
+}
+
+.ilmoitus-form button {
+  height: 38px;
+  font-size: 13px;
+}
+
+.report-btn {
+  color: var(--danger);
+}
+
+.kommentti-ilmoita-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 11px;
+  text-decoration: underline;
+  height: auto;
+  padding: 0;
+}
+
+.ilmoitus-kortti {
+  background: var(--bg);
+  border: 1px solid var(--warning-border);
+  border-radius: 10px;
+  padding: 0.65rem 0.75rem;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.ilmoitus-kohde {
+  font-weight: 600;
+  margin-bottom: 3px;
+}
+
+.ilmoitus-syy {
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.ilmoitus-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.ilmoitus-actions button {
+  height: 32px;
+  font-size: 12px;
+  padding: 0 10px;
+  flex: 1;
+}
+
+.hintaindeksi-intro p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.hintaindeksi-tilastot {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 1rem;
+}
+
+.hintaindeksi-tilastot .tilastot-rivi {
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 10px;
+  background: var(--card);
+}
