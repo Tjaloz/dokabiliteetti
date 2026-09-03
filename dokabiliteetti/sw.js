@@ -1,10 +1,17 @@
-var CACHE_NAME = "dokabiliteetti-v16";
+var CACHE_NAME = "dokabiliteetti-v17";
 var ASSETS = [
   "./",
   "./index.html",
   "./tietosuoja.html",
   "./styles.css",
-  "./app.js",
+  "./js/app.js",
+  "./js/core.js",
+  "./js/i18n.js",
+  "./js/admin.js",
+  "./js/juomat.js",
+  "./js/booli.js",
+  "./js/csv.js",
+  "./js/share-image.js",
   "./firebase-config.js",
   "./manifest.json",
   "./robots.txt",

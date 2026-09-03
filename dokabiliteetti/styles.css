@@ -174,11 +174,68 @@ button.ghost {
 
 .toolbar {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 8px;
   margin-bottom: 0.75rem;
   font-size: 13px;
   color: var(--text-secondary);
+}
+
+.toolbar #maara-teksti {
+  flex: 1;
+  min-width: 0;
+}
+
+.toolbar button {
+  flex: 0 0 auto;
+  height: 30px;
+  font-size: 12px;
+  padding: 0 10px;
+}
+
+.kieli-valitsin {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 0.5rem;
+}
+
+.kieli-btn {
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.kieli-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.pohjat-rivi {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  margin-bottom: 1rem;
+}
+
+.pohjat-rivi::-webkit-scrollbar {
+  display: none;
+}
+
+.pohja-btn {
+  flex: 0 0 auto;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  white-space: nowrap;
 }
 
 #tulokset {

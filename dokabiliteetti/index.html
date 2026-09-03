@@ -30,8 +30,8 @@
 <link rel="preconnect" href="https://www.gstatic.com">
 <link rel="preconnect" href="https://firestore.googleapis.com">
 <link rel="stylesheet" href="styles.css">
-<meta name="google-adsense-account" content="ca-pub-6383068358822889">
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6383068358822889" crossorigin="anonymous"></script>
+<meta name="google-adsense-account" content="ca-pub-9GRNVtU9PWfOY656DMYuvJ6BIcs1">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9GRNVtU9PWfOY656DMYuvJ6BIcs1" crossorigin="anonymous"></script>
 
 <script type="application/ld+json">
 {
@@ -47,7 +47,7 @@
     "price": "0",
     "priceCurrency": "EUR"
   },
-  "inLanguage": "fi"
+  "inLanguage": ["fi", "sv", "en"]
 }
 </script>
 
@@ -106,45 +106,50 @@
   <p style="padding:1rem; text-align:center;">Dokabiliteetti vaatii JavaScriptin toimiakseen. Ota JavaScript k&auml;ytt&ouml;&ouml;n selaimestasi n&auml;hd&auml;ksesi hintaindeksin ja laskurit.</p>
 </noscript>
 
-<a href="#lisaa-form" class="skip-link">Siirry sis&auml;lt&ouml;&ouml;n</a>
+<a href="#lisaa-form" class="skip-link" data-i18n="skip_link">Siirry sis&auml;lt&ouml;&ouml;n</a>
 
-<div id="offline-banner" class="offline-banner" hidden>&#128225; Ei internetyhteytt&auml; &mdash; muutokset l&auml;hetet&auml;&auml;n automaattisesti kun yhteys palaa.</div>
+<div id="offline-banner" class="offline-banner" hidden data-i18n="offline_banner">&#128225; Ei internetyhteytt&auml; &mdash; muutokset l&auml;hetet&auml;&auml;n automaattisesti kun yhteys palaa.</div>
 
 <header>
-  <h1>Dokabiliteetti</h1>
-  <p class="subtitle">Kuinka paljon alkoholia saat rahoillesi</p>
+  <div class="kieli-valitsin" role="group" aria-label="Kieli / Language / Språk">
+    <button type="button" class="kieli-btn active" data-kieli="fi">FI</button>
+    <button type="button" class="kieli-btn" data-kieli="sv">SV</button>
+    <button type="button" class="kieli-btn" data-kieli="en">EN</button>
+  </div>
+  <h1 data-i18n="header_title">Dokabiliteetti</h1>
+  <p class="subtitle" data-i18n="header_subtitle">Kuinka paljon alkoholia saat rahoillesi</p>
 </header>
 
 <main>
   <nav class="tabs" role="tablist" aria-label="Laskurin valinta">
-    <button type="button" class="tab-btn active" data-tab="doka" role="tab" aria-selected="true">Dokabiliteetti</button>
-    <button type="button" class="tab-btn" data-tab="booli" role="tab" aria-selected="false">Boolilaskuri</button>
-    <button type="button" class="tab-btn" data-tab="hinta" role="tab" aria-selected="false">Hintaindeksi</button>
+    <button type="button" class="tab-btn active" data-tab="doka" role="tab" aria-selected="true" data-i18n="tab_doka">Dokabiliteetti</button>
+    <button type="button" class="tab-btn" data-tab="booli" role="tab" aria-selected="false" data-i18n="tab_booli">Boolilaskuri</button>
+    <button type="button" class="tab-btn" data-tab="hinta" role="tab" aria-selected="false" data-i18n="tab_hinta">Hintaindeksi</button>
   </nav>
 
   <section id="doka-nakyma">
   <form id="lisaa-form" autocomplete="off">
-    <label for="nimi">Juoman nimi</label>
+    <label for="nimi" data-i18n="label_nimi">Juoman nimi</label>
     <div class="nimi-row">
-      <input type="text" id="nimi" placeholder="esim. Karhu III">
+      <input type="text" id="nimi" placeholder="esim. Karhu III" data-i18n-placeholder="placeholder_nimi">
       <button type="button" id="skannaa-btn" class="ghost scan-btn" hidden>&#128247;</button>
     </div>
 
     <div class="grid-2">
       <div>
-        <label for="hinta">Hinta (&euro;)</label>
+        <label for="hinta" data-i18n="label_hinta">Hinta (&euro;)</label>
         <input type="number" id="hinta" inputmode="decimal" min="0" step="0.01" placeholder="3.50">
       </div>
       <div>
-        <label for="koko">Koko (ml)</label>
+        <label for="koko" data-i18n="label_koko">Koko (ml)</label>
         <input type="number" id="koko" inputmode="decimal" min="0" step="1" placeholder="330">
       </div>
     </div>
 
-    <label for="prosentti">Alkoholi (%)</label>
+    <label for="prosentti" data-i18n="label_prosentti">Alkoholi (%)</label>
     <input type="number" id="prosentti" inputmode="decimal" min="0" step="0.1" placeholder="4.6">
 
-    <label for="kauppa">Kauppa</label>
+    <label for="kauppa" data-i18n="label_kauppa">Kauppa</label>
     <select id="kauppa">
       <option value="Alko">Alko</option>
       <option value="Prisma">Prisma</option>
@@ -157,34 +162,35 @@
       <option value="Muu">Muu</option>
     </select>
 
-    <label for="lisaaja">Nimesi (valinnainen)</label>
-    <input type="text" id="lisaaja" placeholder="esim. Matti">
+    <label for="lisaaja" data-i18n="label_lisaaja">Nimesi (valinnainen)</label>
+    <input type="text" id="lisaaja" placeholder="esim. Matti" data-i18n-placeholder="placeholder_lisaaja">
 
     <p id="error-msg" class="error" hidden></p>
 
     <div id="duplikaatti-varoitus" class="dup-warning" hidden>
       <p id="duplikaatti-teksti"></p>
       <div class="dup-actions">
-        <button type="button" id="duplikaatti-paivita">P&auml;ivit&auml; olemassa oleva</button>
-        <button type="button" id="duplikaatti-ohita" class="ghost">Lis&auml;&auml; silti uutena</button>
+        <button type="button" id="duplikaatti-paivita" data-i18n="btn_dup_paivita">P&auml;ivit&auml; olemassa oleva</button>
+        <button type="button" id="duplikaatti-ohita" class="ghost" data-i18n="btn_dup_ohita">Lis&auml;&auml; silti uutena</button>
       </div>
     </div>
 
-    <button type="submit" id="lisaa-btn">Lis&auml;&auml; juoma</button>
+    <button type="submit" id="lisaa-btn" data-i18n="btn_lisaa_juoma">Lis&auml;&auml; juoma</button>
   </form>
 
   <div id="kunniamaininta" class="leaderboard" hidden></div>
 
   <div class="toolbar" hidden id="toolbar">
     <span id="maara-teksti"></span>
-    <button id="tyhjenna-btn" class="ghost" hidden>Tyhjenn&auml;&nbsp;kaikki</button>
+    <button id="vie-csv-btn" class="ghost" data-i18n="btn_vie_csv">&#11015;&#65039; Vie CSV</button>
+    <button id="tyhjenna-btn" class="ghost" hidden data-i18n="btn_tyhjenna">Tyhjenn&auml;&nbsp;kaikki</button>
   </div>
 
-  <input type="search" id="haku" class="search-input" placeholder="Hae juoman nimell&auml;&hellip;">
+  <input type="search" id="haku" class="search-input" placeholder="Hae juoman nimell&auml;&hellip;" data-i18n-placeholder="placeholder_haku">
 
   <div class="filters-row">
     <div id="suodattimet" class="filters"></div>
-    <button id="suosikit-toggle" class="filter-chip fav-toggle" type="button">&#9733; Suosikit</button>
+    <button id="suosikit-toggle" class="filter-chip fav-toggle" type="button" data-i18n="btn_suosikit">&#9733; Suosikit</button>
   </div>
 
   <div id="tulokset"></div>
@@ -192,7 +198,7 @@
   <div class="ad-slot">
     <ins class="adsbygoogle"
          style="display:block"
-         data-ad-client="ca-pub-6383068358822889"
+         data-ad-client="ca-pub-9GRNVtU9PWfOY656DMYuvJ6BIcs1"
          data-ad-slot="TÄYTÄ_TÄHÄN"
          data-ad-format="auto"
          data-full-width-responsive="true"></ins>
@@ -200,40 +206,43 @@
   </section>
 
   <section id="booli-nakyma" hidden>
-    <p class="subtitle">Sekoita boolisi ainesosat ja laske lopputuloksen vahvuus, hinta ja dokabiliteetti.</p>
+    <p class="subtitle" data-i18n="booli_subtitle">Sekoita boolisi ainesosat ja laske lopputuloksen vahvuus, hinta ja dokabiliteetti.</p>
+
+    <h2 class="section-title" data-i18n="heading_pohjat">Aloita valmiista pohjasta</h2>
+    <div id="booli-pohjat" class="pohjat-rivi"></div>
 
     <div id="ainesosat"></div>
 
-    <button type="button" id="lisaa-ainesosa-btn" class="ghost add-ainesosa-btn">+ Lis&auml;&auml; ainesosa</button>
+    <button type="button" id="lisaa-ainesosa-btn" class="ghost add-ainesosa-btn" data-i18n="btn_lisaa_ainesosa">+ Lis&auml;&auml; ainesosa</button>
 
     <div id="booli-tulos" class="booli-tulos"></div>
 
     <div class="resepti-tallennus">
-      <input type="text" id="resepti-nimi" placeholder="Reseptin nimi, esim. Kes&auml;booli" maxlength="60">
-      <button type="button" id="tallenna-resepti-btn">Tallenna resepti jaettuun listaan</button>
+      <input type="text" id="resepti-nimi" placeholder="Reseptin nimi, esim. Kes&auml;booli" maxlength="60" data-i18n-placeholder="placeholder_resepti_nimi">
+      <button type="button" id="tallenna-resepti-btn" data-i18n="btn_tallenna_resepti">Tallenna resepti jaettuun listaan</button>
       <p id="resepti-virhe" class="error" hidden></p>
     </div>
 
-    <h2 class="section-title">Tallennetut reseptit</h2>
+    <h2 class="section-title" data-i18n="heading_tallennetut_reseptit">Tallennetut reseptit</h2>
     <div id="reseptit"></div>
   </section>
 
   <section id="hinta-nakyma" hidden>
     <div class="hintaindeksi-intro">
-      <p>Dokabiliteetti-hintaindeksi lasketaan suoraan k&auml;ytt&auml;jien yll&auml; lis&auml;&auml;mist&auml; hinnoista kaavalla <strong>(koko&nbsp;ml &times; alkoholi-%) / hinta&nbsp;&euro;</strong>. Mit&auml; suurempi luku, sit&auml; enemm&auml;n puhdasta alkoholia saat jokaista euroa kohden. Indeksi p&auml;ivittyy automaattisesti aina kun joku lis&auml;&auml; tai p&auml;ivitt&auml;&auml; hinnan &ndash; se ei ole toimituksellinen arvio vaan suoraan yhteis&ouml;n keräämää dataa.</p>
+      <p data-i18n="hintaindeksi_intro">Dokabiliteetti-hintaindeksi lasketaan suoraan k&auml;ytt&auml;jien lis&auml;&auml;mist&auml; hinnoista kaavalla (koko ml &times; alkoholi-%) / hinta &euro;. Mit&auml; suurempi luku, sit&auml; enemm&auml;n puhdasta alkoholia saat jokaista euroa kohden. Indeksi p&auml;ivittyy automaattisesti aina kun joku lis&auml;&auml; tai p&auml;ivitt&auml;&auml; hinnan &ndash; se ei ole toimituksellinen arvio vaan suoraan yhteis&ouml;n keräämää dataa.</p>
     </div>
 
     <div id="hintaindeksi-tilastot" class="hintaindeksi-tilastot"></div>
 
-    <h2 class="section-title">Top 10 paras dokabiliteetti juuri nyt</h2>
+    <h2 class="section-title" data-i18n="heading_top10">Top 10 paras dokabiliteetti juuri nyt</h2>
     <div id="hintaindeksi-top10"></div>
 
-    <h2 class="section-title">Kaupoittain: keskimääräinen dokabiliteetti</h2>
+    <h2 class="section-title" data-i18n="heading_kaupoittain">Kaupoittain: keskimääräinen dokabiliteetti</h2>
     <div id="hintaindeksi-kaupat"></div>
   </section>
 
   <section id="faq" class="faq-section" aria-label="Usein kysytyt kysymykset">
-    <h2 class="section-title">Usein kysytyt kysymykset</h2>
+    <h2 class="section-title" data-i18n="heading_ukk">Usein kysytyt kysymykset</h2>
 
     <details>
       <summary>Mik&auml;&auml; on dokabiliteetti?</summary>
@@ -263,33 +272,36 @@
 </main>
 
 <footer>
-  <p>Dokabiliteetti = (koko&nbsp;ml &times; alkoholi-%) / hinta&nbsp;&euro;. Isompi luku = parempi diili. Lista on jaettu &ndash; kaikki sovellusta k&auml;ytt&auml;v&auml;t n&auml;kev&auml;t samat juomat.</p>
+  <p data-i18n="footer_kaava">Dokabiliteetti = (koko&nbsp;ml &times; alkoholi-%) / hinta&nbsp;&euro;. Isompi luku = parempi diili. Lista on jaettu &ndash; kaikki sovellusta k&auml;ytt&auml;v&auml;t n&auml;kev&auml;t samat juomat.</p>
 
-  <button id="admin-toggle" class="link-btn">Yll&auml;pito</button>
-  <a href="tietosuoja.html" class="link-btn" style="display:block; text-decoration:underline;">Tietosuoja</a>
+  <button id="admin-toggle" class="link-btn" data-i18n="link_yllapito">Yll&auml;pito</button>
+  <a href="tietosuoja.html" class="link-btn" style="display:block; text-decoration:underline;" data-i18n="link_tietosuoja">Tietosuoja</a>
 
   <form id="admin-form" class="admin-form" hidden autocomplete="off">
-    <input type="email" id="admin-email" placeholder="S&auml;hk&ouml;posti" autocomplete="username">
-    <input type="password" id="admin-salasana" placeholder="Salasana" autocomplete="current-password">
-    <button type="submit">Kirjaudu</button>
+    <input type="email" id="admin-email" placeholder="S&auml;hk&ouml;posti" autocomplete="username" data-i18n-placeholder="placeholder_email">
+    <input type="password" id="admin-salasana" placeholder="Salasana" autocomplete="current-password" data-i18n-placeholder="placeholder_salasana">
+    <button type="submit" data-i18n="btn_kirjaudu">Kirjaudu</button>
     <p id="admin-virhe" class="error" hidden></p>
   </form>
 
-  <button id="admin-logout" class="link-btn" hidden>Kirjaudu ulos (yll&auml;pit&auml;j&auml;n&auml;)</button>
+  <button id="admin-logout" class="link-btn" hidden data-i18n="btn_kirjaudu_ulos">Kirjaudu ulos (yll&auml;pit&auml;j&auml;n&auml;)</button>
 
-  <button id="tilastot-toggle" class="link-btn" hidden>&#128202; Tilastot</button>
+  <button id="tilastot-toggle" class="link-btn" hidden data-i18n="btn_tilastot">&#128202; Tilastot</button>
   <div id="tilastot-paneeli" class="tilastot-paneeli" hidden></div>
 
-  <button id="ilmoitukset-toggle" class="link-btn" hidden>&#128680; Ilmoitukset</button>
+  <button id="ilmoitukset-toggle" class="link-btn" hidden data-i18n="btn_ilmoitukset_yksikko">&#128680; Ilmoitukset</button>
   <div id="ilmoitukset-paneeli" class="tilastot-paneeli" hidden></div>
+
+  <button id="virheloki-toggle" class="link-btn" hidden data-i18n="btn_virheloki">&#128027; Virheet</button>
+  <div id="virheloki-paneeli" class="tilastot-paneeli" hidden></div>
 </footer>
 
 <div id="skanneri" class="scanner-overlay" hidden>
   <video id="skanneri-video" autoplay playsinline muted></video>
   <p id="skanneri-status" aria-live="polite"></p>
-  <button type="button" id="skanneri-sulje">Sulje</button>
+  <button type="button" id="skanneri-sulje" data-i18n="skanneri_sulje">Sulje</button>
 </div>
 
-<script type="module" src="app.js"></script>
+<script type="module" src="js/app.js"></script>
 </body>
 </html>
