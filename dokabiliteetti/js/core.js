@@ -23,6 +23,8 @@ export var juomatCol = collection(db, "juomat");
 export var juomatQuery = query(juomatCol, orderBy("luotu", "desc"));
 export var reseptitCol = collection(db, "boolireseptit");
 export var reseptitQuery = query(reseptitCol, orderBy("luotu", "desc"));
+export var drinkkireseptitCol = collection(db, "drinkkireseptit");
+export var drinkkireseptitQuery = query(drinkkireseptitCol, orderBy("luotu", "desc"));
 export var ilmoituksetCol = collection(db, "ilmoitukset");
 export var ilmoituksetQuery = query(ilmoituksetCol, orderBy("luotu", "desc"));
 export var virheetCol = collection(db, "virheet");
@@ -32,7 +34,7 @@ enableIndexedDbPersistence(db).catch(function (err) {
   console.warn("Offline-tuki ei käytössä tässä selaimessa:", err.code);
 });
 
-export var KAUPAT = ["Alko", "Prisma", "S-market", "Alepa/Sale", "K-citymarket", "K-market", "K-supermarket", "Ulkomaat", "Muu"];
+export var KAUPAT = ["Alko", "Prisma", "S-market", "Alepa/Sale", "K-citymarket", "K-market", "K-supermarket", "Lidl", "Viro", "Latvia", "Ulkomaat", "Muu"];
 export var YKSIKKOKERROIN = { l: 1, dl: 0.1, cl: 0.01 };
 
 export var OMA_NIMI_AVAIN = "dokabiliteetti-oma-nimi";

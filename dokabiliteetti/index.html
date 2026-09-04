@@ -30,8 +30,8 @@
 <link rel="preconnect" href="https://www.gstatic.com">
 <link rel="preconnect" href="https://firestore.googleapis.com">
 <link rel="stylesheet" href="styles.css">
-<meta name="google-adsense-account" content="ca-pub-9GRNVtU9PWfOY656DMYuvJ6BIcs1">
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9GRNVtU9PWfOY656DMYuvJ6BIcs1" crossorigin="anonymous"></script>
+<meta name="google-adsense-account" content="ca-pub-6383068358822889">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6383068358822889" crossorigin="anonymous"></script>
 
 <script type="application/ld+json">
 {
@@ -70,6 +70,14 @@
       "acceptedAnswer": {
         "@type": "Answer",
         "text": "Boolilaskurilla voit sekoittaa useita ainesosia ja laskea sekoituksen lopullisen alkoholiprosentin, kokonaishinnan ja annosmäärän automaattisesti."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Entä drinkkilaskuri?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Drinkkilaskuri on sama laskin pienemmässä mittakaavassa yhden annoksen sekoitukselle, senttilitroina litrojen sijaan."
       }
     },
     {
@@ -124,6 +132,7 @@
   <nav class="tabs" role="tablist" aria-label="Laskurin valinta">
     <button type="button" class="tab-btn active" data-tab="doka" role="tab" aria-selected="true" data-i18n="tab_doka">Dokabiliteetti</button>
     <button type="button" class="tab-btn" data-tab="booli" role="tab" aria-selected="false" data-i18n="tab_booli">Boolilaskuri</button>
+    <button type="button" class="tab-btn" data-tab="drinkki" role="tab" aria-selected="false" data-i18n="tab_drinkki">Drinkkilaskuri</button>
     <button type="button" class="tab-btn" data-tab="hinta" role="tab" aria-selected="false" data-i18n="tab_hinta">Hintaindeksi</button>
   </nav>
 
@@ -158,6 +167,9 @@
       <option value="K-citymarket">K-citymarket</option>
       <option value="K-market">K-market</option>
       <option value="K-supermarket">K-supermarket</option>
+      <option value="Lidl">Lidl</option>
+      <option value="Viro">Viro</option>
+      <option value="Latvia">Latvia</option>
       <option value="Ulkomaat">Ulkomaat</option>
       <option value="Muu">Muu</option>
     </select>
@@ -198,7 +210,7 @@
   <div class="ad-slot">
     <ins class="adsbygoogle"
          style="display:block"
-         data-ad-client="ca-pub-9GRNVtU9PWfOY656DMYuvJ6BIcs1"
+         data-ad-client="ca-pub-6383068358822889"
          data-ad-slot="TÄYTÄ_TÄHÄN"
          data-ad-format="auto"
          data-full-width-responsive="true"></ins>
@@ -219,12 +231,36 @@
 
     <div class="resepti-tallennus">
       <input type="text" id="resepti-nimi" placeholder="Reseptin nimi, esim. Kes&auml;booli" maxlength="60" data-i18n-placeholder="placeholder_resepti_nimi">
+      <input type="text" id="lisaaineet" placeholder="Lis&auml;aineet (valinnainen), esim. sokeri, suola, lime" maxlength="120" data-i18n-placeholder="placeholder_lisaaineet">
       <button type="button" id="tallenna-resepti-btn" data-i18n="btn_tallenna_resepti">Tallenna resepti jaettuun listaan</button>
       <p id="resepti-virhe" class="error" hidden></p>
     </div>
 
     <h2 class="section-title" data-i18n="heading_tallennetut_reseptit">Tallennetut reseptit</h2>
     <div id="reseptit"></div>
+  </section>
+
+  <section id="drinkki-nakyma" hidden>
+    <p class="subtitle" data-i18n="drinkki_subtitle">Sekoita yhden drinkin annos pienill&auml; m&auml;&auml;rill&auml; ja laske vahvuus, hinta ja dokabiliteetti.</p>
+
+    <h2 class="section-title" data-i18n="heading_pohjat">Aloita valmiista pohjasta</h2>
+    <div id="drinkki-pohjat" class="pohjat-rivi"></div>
+
+    <div id="drinkki-ainesosat"></div>
+
+    <button type="button" id="drinkki-lisaa-ainesosa-btn" class="ghost add-ainesosa-btn" data-i18n="btn_lisaa_ainesosa">+ Lis&auml;&auml; ainesosa</button>
+
+    <div id="drinkki-tulos" class="booli-tulos"></div>
+
+    <div class="resepti-tallennus">
+      <input type="text" id="drinkki-resepti-nimi" placeholder="Drinkin nimi, esim. Gin Tonic" maxlength="60" data-i18n-placeholder="placeholder_drinkki_nimi">
+      <input type="text" id="drinkki-lisaaineet" placeholder="Lis&auml;aineet (valinnainen), esim. sokeri, suola, lime" maxlength="120" data-i18n-placeholder="placeholder_lisaaineet">
+      <button type="button" id="drinkki-tallenna-resepti-btn" data-i18n="btn_tallenna_drinkki">Tallenna drinkki jaettuun listaan</button>
+      <p id="drinkki-resepti-virhe" class="error" hidden></p>
+    </div>
+
+    <h2 class="section-title" data-i18n="heading_tallennetut_drinkit">Tallennetut drinkit</h2>
+    <div id="drinkki-reseptit"></div>
   </section>
 
   <section id="hinta-nakyma" hidden>
@@ -252,6 +288,11 @@
     <details>
       <summary>Miten boolilaskuri toimii?</summary>
       <p>Boolilaskurilla voit sekoittaa useita ainesosia (esim. viini&auml;, siideri&auml; ja mehua) ja laskea sekoituksen lopullisen alkoholiprosentin, kokonaishinnan ja annosm&auml;&auml;r&auml;n. Tulokset p&auml;ivittyv&auml;t automaattisesti sit&auml; mukaa kun lis&auml;&auml;t ainesosia.</p>
+    </details>
+
+    <details>
+      <summary>Ent&auml; drinkkilaskuri?</summary>
+      <p>Drinkkilaskuri on sama laskin pienemm&auml;ss&auml; mittakaavassa &ndash; yhden annoksen sekoitukselle (esim. gin tonic tai mojito) senttilitroina litrojen sijaan.</p>
     </details>
 
     <details>

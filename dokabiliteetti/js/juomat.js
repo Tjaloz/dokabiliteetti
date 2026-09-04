@@ -58,7 +58,7 @@ var hintaindeksiTilastotEl = document.getElementById("hintaindeksi-tilastot");
 var hintaindeksiTop10El = document.getElementById("hintaindeksi-top10");
 var hintaindeksiKaupatEl = document.getElementById("hintaindeksi-kaupat");
 
-var aktiivinenSuodatin = "Kaikki";
+var aktiivisetSuodattimet = {};
 var hakuTeksti = "";
 var naytaVainSuosikit = false;
 var avoinKommentit = {};
@@ -83,14 +83,23 @@ var skanneriInterval = null;
 var odottavaLisays = null;
 
 function renderaaSuodattimet() {
+  var eiYhtaanValittuna = Object.keys(aktiivisetSuodattimet).length === 0;
   var kaikkiKaupat = ["Kaikki"].concat(KAUPAT);
   suodattimetEl.innerHTML = kaikkiKaupat.map(function (k) {
-    return '<button type="button" class="filter-chip' + (k === aktiivinenSuodatin ? " active" : "") + '" data-kauppa="' + escapeHtml(k) + '">' + escapeHtml(k) + "</button>";
+    var aktiivinen = k === "Kaikki" ? eiYhtaanValittuna : !!aktiivisetSuodattimet[k];
+    return '<button type="button" class="filter-chip' + (aktiivinen ? " active" : "") + '" data-kauppa="' + escapeHtml(k) + '">' + escapeHtml(k) + "</button>";
   }).join("");
 
   Array.prototype.forEach.call(suodattimetEl.querySelectorAll(".filter-chip"), function (btn) {
     btn.addEventListener("click", function () {
-      aktiivinenSuodatin = btn.getAttribute("data-kauppa");
+      var k = btn.getAttribute("data-kauppa");
+      if (k === "Kaikki") {
+        aktiivisetSuodattimet = {};
+      } else if (aktiivisetSuodattimet[k]) {
+        delete aktiivisetSuodattimet[k];
+      } else {
+        aktiivisetSuodattimet[k] = true;
+      }
       render();
     });
   });
@@ -105,7 +114,8 @@ function renderaaKunniamaininta() {
   }
   var laskuri = {};
   juomat.forEach(function (j) {
-    var nimi = (j.lisaaja || "Nimetön").trim() || "Nimetön";
+    var nimi = (j.lisaaja || "").trim();
+    if (!nimi || nimi === "Nimetön") return;
     laskuri[nimi] = (laskuri[nimi] || 0) + 1;
   });
   var jarjestys = Object.keys(laskuri).sort(function (a, b) {
@@ -225,7 +235,7 @@ export function render() {
 
   var haku = hakuTeksti.trim().toLowerCase();
   var nakyvatJuomat = juomat.filter(function (j) {
-    if (aktiivinenSuodatin !== "Kaikki" && j.kauppa !== aktiivinenSuodatin) return false;
+    if (Object.keys(aktiivisetSuodattimet).length > 0 && !aktiivisetSuodattimet[j.kauppa]) return false;
     if (naytaVainSuosikit && !suosikit[j.id]) return false;
     if (haku && j.nimi.toLowerCase().indexOf(haku) === -1) return false;
     return true;

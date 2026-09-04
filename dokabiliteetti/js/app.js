@@ -3,6 +3,7 @@ import { t, kielenVaihtuessa, asetaKieli, nykyinenKieli, soveltaaStaattinenKaann
 import "./admin.js";
 import "./juomat.js";
 import "./booli.js";
+import "./drinkki.js";
 
 // ---- Kielivalitsin ----
 var kieliBtns = document.querySelectorAll(".kieli-btn");
@@ -26,9 +27,10 @@ paivitaKieliBtnit();
 var tabBtns = document.querySelectorAll(".tab-btn");
 var dokaNakymaEl = document.getElementById("doka-nakyma");
 var booliNakymaEl = document.getElementById("booli-nakyma");
+var drinkkiNakymaEl = document.getElementById("drinkki-nakyma");
 var hintaNakymaEl = document.getElementById("hinta-nakyma");
 
-var TAB_AVAIMET = { doka: "tab_doka", booli: "tab_booli", hinta: "tab_hinta" };
+var TAB_AVAIMET = { doka: "tab_doka", booli: "tab_booli", drinkki: "tab_drinkki", hinta: "tab_hinta" };
 var nykyinenValilehti = "doka";
 
 function vaihdaValilehti(tab, paivitaHash) {
@@ -42,6 +44,7 @@ function vaihdaValilehti(tab, paivitaHash) {
   });
   dokaNakymaEl.hidden = tab !== "doka";
   booliNakymaEl.hidden = tab !== "booli";
+  drinkkiNakymaEl.hidden = tab !== "drinkki";
   hintaNakymaEl.hidden = tab !== "hinta";
 
   document.title = tab === "doka"

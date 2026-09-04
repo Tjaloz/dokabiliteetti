@@ -1,4 +1,4 @@
-var CACHE_NAME = "dokabiliteetti-v17";
+var CACHE_NAME = "dokabiliteetti-v21";
 var ASSETS = [
   "./",
   "./index.html",
@@ -10,6 +10,7 @@ var ASSETS = [
   "./js/admin.js",
   "./js/juomat.js",
   "./js/booli.js",
+  "./js/drinkki.js",
   "./js/csv.js",
   "./js/share-image.js",
   "./firebase-config.js",

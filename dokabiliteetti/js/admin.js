@@ -73,8 +73,10 @@ function renderaaTilastot() {
   var kommenttejaYhteensa = 0;
 
   juomat.forEach(function (j) {
-    var nimi = (j.lisaaja || "Nimetön").trim() || "Nimetön";
-    lisaajaLaskuri[nimi] = (lisaajaLaskuri[nimi] || 0) + 1;
+    var nimi = (j.lisaaja || "").trim();
+    if (nimi && nimi !== "Nimetön") {
+      lisaajaLaskuri[nimi] = (lisaajaLaskuri[nimi] || 0) + 1;
+    }
     var kauppa = j.kauppa || "Muu";
     kauppaLaskuri[kauppa] = (kauppaLaskuri[kauppa] || 0) + 1;
     peukutYhteensa += j.peukut || 0;
