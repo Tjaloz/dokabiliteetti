@@ -63,6 +63,7 @@ var hakuTeksti = "";
 var naytaVainSuosikit = false;
 var avoinKommentit = {};
 var avoinHintaPaivitys = {};
+var avoinKauppaMuutos = {};
 var avoinIlmoitus = {};
 var viimeisinNakyvatJuomat = [];
 
@@ -141,6 +142,7 @@ function kortinHtml(j, onParas, suhde) {
   var onPeukutettu = !!peukutukset[j.id];
   var kommentitAuki = !!avoinKommentit[j.id];
   var hintaAuki = !!avoinHintaPaivitys[j.id];
+  var kauppaAuki = !!avoinKauppaMuutos[j.id];
   var ilmoitusAuki = !!avoinIlmoitus[j.id];
   var kommentit = j.kommentit || [];
   var peukut = j.peukut || 0;
@@ -168,6 +170,7 @@ function kortinHtml(j, onParas, suhde) {
     '<button class="action-btn' + (onPeukutettu ? " active" : "") + '" data-action="peukku" data-id="' + j.id + '">' + peukkuTeksti + " (" + peukut + ")</button>" +
     '<button class="action-btn" data-action="toggle-kommentit" data-id="' + j.id + '">' + t("btn_kommentit") + " (" + kommentit.length + ")</button>" +
     '<button class="action-btn" data-action="toggle-hinta" data-id="' + j.id + '">' + t("btn_paivita_hinta") + "</button>" +
+    (onAdmin ? '<button class="action-btn" data-action="toggle-kauppa" data-id="' + j.id + '">' + t("btn_muuta_kauppa") + "</button>" : "") +
     '<button class="action-btn" data-action="jaa" data-id="' + j.id + '">' + t("btn_jaa") + "</button>" +
     '<button class="action-btn report-btn" data-action="toggle-ilmoitus" data-id="' + j.id + '">' + t("btn_ilmoita") + "</button>" +
     "</div>";
@@ -195,6 +198,18 @@ function kortinHtml(j, onParas, suhde) {
       '<form class="hinta-form" data-action="paivita-hinta" data-id="' + j.id + '">' +
       '<input type="number" min="0.01" step="0.01" placeholder="' + escapeHtml(t("placeholder_uusi_hinta")) + '" required>' +
       '<button type="submit">' + t("btn_paivita") + "</button>" +
+      "</form></div>";
+  }
+
+  if (kauppaAuki && onAdmin) {
+    html += '<div class="hinta-panel">' +
+      '<form class="hinta-form" data-action="paivita-kauppa" data-id="' + j.id + '">' +
+        '<select name="kauppa" aria-label="' + escapeHtml(t("label_kauppa")) + '">' +
+          KAUPAT.map(function (k) {
+            return '<option value="' + escapeHtml(k) + '"' + (k === j.kauppa ? " selected" : "") + '>' + escapeHtml(k) + "</option>";
+          }).join("") +
+        "</select>" +
+        '<button type="submit">' + t("btn_paivita") + "</button>" +
       "</form></div>";
   }
 
@@ -671,6 +686,10 @@ tuloksetEl.addEventListener("click", function (e) {
   } else if (action === "toggle-hinta") {
     avoinHintaPaivitys[id] = !avoinHintaPaivitys[id];
     render();
+  } else if (action === "toggle-kauppa") {
+    if (!onAdmin) return;
+    avoinKauppaMuutos[id] = !avoinKauppaMuutos[id];
+    render();
   } else if (action === "toggle-ilmoitus") {
     avoinIlmoitus[id] = !avoinIlmoitus[id];
     render();
@@ -737,6 +756,21 @@ tuloksetEl.addEventListener("submit", function (e) {
     }).catch(function (e2) {
       console.error("Hinnan päivitys epäonnistui", e2);
       kirjaaVirhe("paivita-hinta", e2);
+      alert(t("virhe_hinnan_paivitys"));
+    });
+  } else if (action === "paivita-kauppa") {
+    e.preventDefault();
+    if (!onAdmin) return;
+    var kauppaSelect = form2.querySelector("select[name=kauppa]");
+    var uusiKauppa = kauppaSelect.value;
+    if (KAUPAT.indexOf(uusiKauppa) === -1) return;
+    updateDoc(doc(db, "juomat", id), {
+      kauppa: uusiKauppa
+    }).then(function () {
+      delete avoinKauppaMuutos[id];
+    }).catch(function (e2) {
+      console.error("Kaupan päivitys epäonnistui", e2);
+      kirjaaVirhe("paivita-kauppa", e2);
       alert(t("virhe_hinnan_paivitys"));
     });
   } else if (action === "ilmoita-juoma") {

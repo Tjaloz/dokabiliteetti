@@ -13,7 +13,7 @@ export const firebaseConfig = {
 // UID-tunnuksesi Firebase Authenticationista (Authentication -> Users -> User UID).
 // Vain tällä UID:lla kirjautunut näkee poistonapit ja saa poistaa rivejä
 // (Firestore-säännöt vaativat saman UID:n palvelinpuolella).
-export const adminUid = "9GRNVtU9PWfOY656DMYuvJ6BIcs1";
+export const adminUid = "TÄYTÄ_TÄHÄN";
 
 // Huom: nämä avaimet EIVÄT ole salaisia - Firebase-web-config on tarkoitettu
 // näkymään julkisesti selaimen puolella. Todellinen suojaus tulee Firestoren
