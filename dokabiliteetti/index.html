@@ -158,6 +158,27 @@
     <label for="prosentti" data-i18n="label_prosentti">Alkoholi (%)</label>
     <input type="number" id="prosentti" inputmode="decimal" min="0" step="0.1" placeholder="4.6">
 
+    <label for="pullotyyppi" data-i18n="label_pullotyyppi">Pullotyyppi (pantti lasketaan automaattisesti)</label>
+    <select id="pullotyyppi">
+      <option value="ei_panttia" data-i18n="pullotyyppi_ei_panttia">Ei panttia</option>
+      <option value="tolkki" data-i18n="pullotyyppi_tolkki">Tölkki</option>
+      <option value="muovipullo" data-i18n="pullotyyppi_muovipullo">Muovipullo</option>
+      <option value="lasipullo" data-i18n="pullotyyppi_lasipullo">Lasipullo</option>
+    </select>
+    <p id="pantti-naytto" class="pantti-naytto" hidden></p>
+
+    <label for="juomatyyppi" data-i18n="label_juomatyyppi">Juoman tyyppi</label>
+    <select id="juomatyyppi">
+      <option value="Olut" data-i18n="tyyppi_olut">Olut</option>
+      <option value="Siideri" data-i18n="tyyppi_siideri">Siideri</option>
+      <option value="Lonkero" data-i18n="tyyppi_lonkero">Lonkero</option>
+      <option value="Viini" data-i18n="tyyppi_viini">Viini</option>
+      <option value="Kuohuviini" data-i18n="tyyppi_kuohuviini">Kuohuviini</option>
+      <option value="Väkevä" data-i18n="tyyppi_vakeva">Väkevä</option>
+      <option value="Long drink" data-i18n="tyyppi_longdrink">Long drink</option>
+      <option value="Muu" data-i18n="tyyppi_muu">Muu</option>
+    </select>
+
     <label for="kauppa" data-i18n="label_kauppa">Kauppa</label>
     <select id="kauppa">
       <option value="Alko">Alko</option>
@@ -168,6 +189,7 @@
       <option value="K-market">K-market</option>
       <option value="K-supermarket">K-supermarket</option>
       <option value="Lidl">Lidl</option>
+      <option value="Femma">Femma</option>
       <option value="Viro">Viro</option>
       <option value="Latvia">Latvia</option>
       <option value="Ulkomaat">Ulkomaat</option>
@@ -203,6 +225,10 @@
   <div class="filters-row">
     <div id="suodattimet" class="filters"></div>
     <button id="suosikit-toggle" class="filter-chip fav-toggle" type="button" data-i18n="btn_suosikit">&#9733; Suosikit</button>
+  </div>
+
+  <div class="filters-row">
+    <div id="tyyppisuodattimet" class="filters"></div>
   </div>
 
   <div id="tulokset"></div>

@@ -1,6 +1,6 @@
 import {
-  db, juomatCol, juomatQuery, KAUPAT, deviceId,
-  laskeDokabiliteetti, pyorista, escapeHtml, muotoilePvm, sparklineSvg,
+  db, juomatCol, juomatQuery, KAUPAT, JUOMATYYPIT, deviceId,
+  laskeDokabiliteetti, laskePantti, pyorista, escapeHtml, muotoilePvm, sparklineSvg,
   lataaLista, tallennaLista, laheteIlmoitus, kirjaaVirhe,
   OMA_NIMI_AVAIN, SUOSIKIT_AVAIN, PEUKUTUKSET_AVAIN
 } from "./core.js";
@@ -29,6 +29,10 @@ var nimiEl = document.getElementById("nimi");
 var hintaEl = document.getElementById("hinta");
 var kokoEl = document.getElementById("koko");
 var prosenttiEl = document.getElementById("prosentti");
+var pullotyyppiEl = document.getElementById("pullotyyppi");
+var panttiNayttoEl = document.getElementById("pantti-naytto");
+var juomatyyppiEl = document.getElementById("juomatyyppi");
+var tyyppisuodattimetEl = document.getElementById("tyyppisuodattimet");
 var kauppaEl = document.getElementById("kauppa");
 var lisaajaEl = document.getElementById("lisaaja");
 var errorEl = document.getElementById("error-msg");
@@ -59,6 +63,7 @@ var hintaindeksiTop10El = document.getElementById("hintaindeksi-top10");
 var hintaindeksiKaupatEl = document.getElementById("hintaindeksi-kaupat");
 
 var aktiivisetSuodattimet = {};
+var aktiivisetTyyppisuodattimet = {};
 var hakuTeksti = "";
 var naytaVainSuosikit = false;
 var avoinKommentit = {};
@@ -106,6 +111,29 @@ function renderaaSuodattimet() {
   });
 
   suosikitToggle.classList.toggle("active", naytaVainSuosikit);
+}
+
+function renderaaTyyppisuodattimet() {
+  var eiYhtaanValittuna = Object.keys(aktiivisetTyyppisuodattimet).length === 0;
+  var kaikkiTyypit = ["Kaikki"].concat(JUOMATYYPIT);
+  tyyppisuodattimetEl.innerHTML = kaikkiTyypit.map(function (tyyppi) {
+    var aktiivinen = tyyppi === "Kaikki" ? eiYhtaanValittuna : !!aktiivisetTyyppisuodattimet[tyyppi];
+    return '<button type="button" class="filter-chip' + (aktiivinen ? " active" : "") + '" data-tyyppi="' + escapeHtml(tyyppi) + '">' + escapeHtml(tyyppi) + "</button>";
+  }).join("");
+
+  Array.prototype.forEach.call(tyyppisuodattimetEl.querySelectorAll(".filter-chip"), function (btn) {
+    btn.addEventListener("click", function () {
+      var tyyppi = btn.getAttribute("data-tyyppi");
+      if (tyyppi === "Kaikki") {
+        aktiivisetTyyppisuodattimet = {};
+      } else if (aktiivisetTyyppisuodattimet[tyyppi]) {
+        delete aktiivisetTyyppisuodattimet[tyyppi];
+      } else {
+        aktiivisetTyyppisuodattimet[tyyppi] = true;
+      }
+      render();
+    });
+  });
 }
 
 function renderaaKunniamaininta() {
@@ -157,7 +185,7 @@ function kortinHtml(j, onParas, suhde) {
     "</div>";
 
   html += '<div class="card-meta">' +
-    '<span class="card-details"><span class="card-store">' + escapeHtml(j.kauppa || "Muu") + "</span>" + pyorista(j.hinta, 2).toFixed(2) + " € · " + j.koko + " ml · " + j.prosentti + "%</span>" +
+    '<span class="card-details"><span class="card-store">' + escapeHtml(j.kauppa || "Muu") + '</span><span class="card-tyyppi">' + escapeHtml(j.juomatyyppi || "Muu") + "</span>" + pyorista(j.hinta, 2).toFixed(2) + " € · " + j.koko + " ml · " + j.prosentti + "%" + (j.pantti > 0 ? ' <span class="pantti-tag">+' + j.pantti.toFixed(2) + " € " + t("pantti_tag") + "</span>" : "") + "</span>" +
     '<span class="card-score">' + pyorista(j.dokabiliteetti, 2) + "</span>" +
     "</div>";
 
@@ -233,6 +261,7 @@ function kortinHtml(j, onParas, suhde) {
 
 export function render() {
   renderaaSuodattimet();
+  renderaaTyyppisuodattimet();
   renderaaKunniamaininta();
 
   if (yhteysVirhe) {
@@ -251,6 +280,7 @@ export function render() {
   var haku = hakuTeksti.trim().toLowerCase();
   var nakyvatJuomat = juomat.filter(function (j) {
     if (Object.keys(aktiivisetSuodattimet).length > 0 && !aktiivisetSuodattimet[j.kauppa]) return false;
+    if (Object.keys(aktiivisetTyyppisuodattimet).length > 0 && !aktiivisetTyyppisuodattimet[j.juomatyyppi]) return false;
     if (naytaVainSuosikit && !suosikit[j.id]) return false;
     if (haku && j.nimi.toLowerCase().indexOf(haku) === -1) return false;
     return true;
@@ -330,11 +360,14 @@ onSnapshot(
         prosentti: data.prosentti,
         dokabiliteetti: data.dokabiliteetti,
         kauppa: data.kauppa || "Muu",
+        juomatyyppi: data.juomatyyppi || "Muu",
         lisaaja: data.lisaaja || "Nimetön",
         historia: data.historia || [],
         peukut: data.peukut || 0,
         kommentit: data.kommentit || [],
         viivakoodi: data.viivakoodi || null,
+        pullotyyppi: data.pullotyyppi || "ei_panttia",
+        pantti: data.pantti || 0,
         luotu: data.luotu && data.luotu.toDate ? data.luotu.toDate() : null
       };
     });
@@ -374,8 +407,8 @@ function piilotaDuplikaattivaroitus() {
   odottavaLisays = null;
 }
 
-function suoritaHinnanPaivitys(id, uusiHinta, vanhaHinta, vanhaKoko, vanhaProsentti) {
-  var uusiDoka = laskeDokabiliteetti(uusiHinta, vanhaKoko, vanhaProsentti);
+function suoritaHinnanPaivitys(id, uusiHinta, vanhaHinta, vanhaKoko, vanhaProsentti, pantti) {
+  var uusiDoka = laskeDokabiliteetti(uusiHinta, vanhaKoko, vanhaProsentti, pantti);
   return updateDoc(doc(db, "juomat", id), {
     hinta: uusiHinta,
     dokabiliteetti: uusiDoka,
@@ -460,7 +493,7 @@ dupPaivitaBtn.addEventListener("click", function () {
   if (!odottavaLisays) return;
   var tiedot = odottavaLisays;
   dupPaivitaBtn.disabled = true;
-  suoritaHinnanPaivitys(tiedot.duplikaatti.id, tiedot.hinta, tiedot.duplikaatti.hinta, tiedot.duplikaatti.koko, tiedot.duplikaatti.prosentti)
+  suoritaHinnanPaivitys(tiedot.duplikaatti.id, tiedot.hinta, tiedot.duplikaatti.hinta, tiedot.duplikaatti.koko, tiedot.duplikaatti.prosentti, tiedot.duplikaatti.pantti)
     .then(function () {
       piilotaDuplikaattivaroitus();
       nimiEl.value = "";
@@ -501,7 +534,10 @@ function luoUusiJuoma(tiedot) {
     prosentti: tiedot.prosentti,
     dokabiliteetti: tiedot.dokabiliteetti,
     kauppa: tiedot.kauppa,
+    juomatyyppi: tiedot.juomatyyppi || "Muu",
     lisaaja: tiedot.lisaaja,
+    pullotyyppi: tiedot.pullotyyppi || "ei_panttia",
+    pantti: tiedot.pantti || 0,
     deviceId: deviceId,
     historia: [],
     peukut: 0,
@@ -521,6 +557,8 @@ function luoUusiJuoma(tiedot) {
       hintaEl.value = "";
       kokoEl.value = "";
       prosenttiEl.value = "";
+      pullotyyppiEl.value = "ei_panttia";
+      naytaPanttiEsikatselu();
       skannattuViivakoodi = null;
       nimiEl.focus();
     }
@@ -546,6 +584,8 @@ function luoUusiJuoma(tiedot) {
     hintaEl.value = "";
     kokoEl.value = "";
     prosenttiEl.value = "";
+    pullotyyppiEl.value = "ei_panttia";
+    naytaPanttiEsikatselu();
     skannattuViivakoodi = null;
     lisaaBtn.disabled = false;
     nimiEl.focus();
@@ -553,6 +593,20 @@ function luoUusiJuoma(tiedot) {
 
   return commitPromise;
 }
+
+function naytaPanttiEsikatselu() {
+  var koko = parseFloat(kokoEl.value);
+  var pantti = laskePantti(pullotyyppiEl.value, koko);
+  if (pantti > 0) {
+    panttiNayttoEl.textContent = t("pantti_esikatselu_prefix") + " " + pantti.toFixed(2) + " € " + t("pantti_esikatselu_suffix");
+    panttiNayttoEl.hidden = false;
+  } else {
+    panttiNayttoEl.hidden = true;
+  }
+}
+
+kokoEl.addEventListener("input", naytaPanttiEsikatselu);
+pullotyyppiEl.addEventListener("change", naytaPanttiEsikatselu);
 
 form.addEventListener("submit", function (e) {
   e.preventDefault();
@@ -569,8 +623,11 @@ form.addEventListener("submit", function (e) {
   errorEl.hidden = true;
 
   var nimi = nimiEl.value.trim() || "Nimetön juoma";
-  var dokabiliteetti = laskeDokabiliteetti(hinta, koko, prosentti);
+  var pullotyyppi = pullotyyppiEl.value || "ei_panttia";
+  var pantti = laskePantti(pullotyyppi, koko);
+  var dokabiliteetti = laskeDokabiliteetti(hinta, koko, prosentti, pantti);
   var kauppa = KAUPAT.indexOf(kauppaEl.value) !== -1 ? kauppaEl.value : "Muu";
+  var juomatyyppi = JUOMATYYPIT.indexOf(juomatyyppiEl.value) !== -1 ? juomatyyppiEl.value : "Muu";
   var lisaaja = lisaajaEl.value.trim().slice(0, 40) || "Nimetön";
 
   if (lisaajaEl.value.trim()) {
@@ -584,13 +641,16 @@ form.addEventListener("submit", function (e) {
     prosentti: prosentti,
     dokabiliteetti: dokabiliteetti,
     kauppa: kauppa,
+    juomatyyppi: juomatyyppi,
     lisaaja: lisaaja,
+    pullotyyppi: pullotyyppi,
+    pantti: pantti,
     viivakoodi: skannattuViivakoodi
   };
 
   var duplikaatti = etsiDuplikaatti(nimi, koko, kauppa, skannattuViivakoodi);
   if (duplikaatti) {
-    odottavaLisays = { duplikaatti: duplikaatti, hinta: hinta, nimi: nimi, koko: koko, prosentti: prosentti, dokabiliteetti: dokabiliteetti, kauppa: kauppa, lisaaja: lisaaja, viivakoodi: skannattuViivakoodi };
+    odottavaLisays = { duplikaatti: duplikaatti, hinta: hinta, nimi: nimi, koko: koko, prosentti: prosentti, dokabiliteetti: dokabiliteetti, kauppa: kauppa, juomatyyppi: juomatyyppi, lisaaja: lisaaja, pullotyyppi: pullotyyppi, pantti: pantti, viivakoodi: skannattuViivakoodi };
     naytaDuplikaattivaroitus(duplikaatti, hinta);
     return;
   }
@@ -627,9 +687,11 @@ if (vieCsvBtn) {
       [
         { otsikko: "Nimi", arvo: function (j) { return j.nimi; } },
         { otsikko: "Kauppa", arvo: function (j) { return j.kauppa; } },
+        { otsikko: "Tyyppi", arvo: function (j) { return j.juomatyyppi; } },
         { otsikko: "Hinta (€)", arvo: function (j) { return pyorista(j.hinta, 2); } },
         { otsikko: "Koko (ml)", arvo: function (j) { return j.koko; } },
         { otsikko: "Alkoholi (%)", arvo: function (j) { return j.prosentti; } },
+        { otsikko: "Pantti (€)", arvo: function (j) { return pyorista(j.pantti || 0, 2); } },
         { otsikko: "Dokabiliteetti", arvo: function (j) { return pyorista(j.dokabiliteetti, 2); } },
         { otsikko: "Lisääjä", arvo: function (j) { return j.lisaaja; } }
       ],
@@ -746,7 +808,7 @@ tuloksetEl.addEventListener("submit", function (e) {
     var hintaInput = form2.querySelector("input");
     var uusiHinta = parseFloat(hintaInput.value);
     if (!uusiHinta || uusiHinta <= 0) return;
-    var uusiDoka = laskeDokabiliteetti(uusiHinta, juoma.koko, juoma.prosentti);
+    var uusiDoka = laskeDokabiliteetti(uusiHinta, juoma.koko, juoma.prosentti, juoma.pantti);
     updateDoc(doc(db, "juomat", id), {
       hinta: uusiHinta,
       dokabiliteetti: uusiDoka,
@@ -799,4 +861,5 @@ tuloksetEl.addEventListener("submit", function (e) {
 kielenVaihtuessa(function () {
   render();
   renderaaHintaindeksi();
+  naytaPanttiEsikatselu();
 });

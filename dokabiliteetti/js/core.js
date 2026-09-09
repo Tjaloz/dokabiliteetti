@@ -34,7 +34,8 @@ enableIndexedDbPersistence(db).catch(function (err) {
   console.warn("Offline-tuki ei käytössä tässä selaimessa:", err.code);
 });
 
-export var KAUPAT = ["Alko", "Prisma", "S-market", "Alepa/Sale", "K-citymarket", "K-market", "K-supermarket", "Lidl", "Viro", "Latvia", "Ulkomaat", "Muu"];
+export var KAUPAT = ["Alko", "Prisma", "S-market", "Alepa/Sale", "K-citymarket", "K-market", "K-supermarket", "Lidl", "Femma", "Viro", "Latvia", "Ulkomaat", "Muu"];
+export var JUOMATYYPIT = ["Olut", "Siideri", "Lonkero", "Viini", "Kuohuviini", "Väkevä", "Long drink", "Muu"];
 export var YKSIKKOKERROIN = { l: 1, dl: 0.1, cl: 0.01 };
 
 export var OMA_NIMI_AVAIN = "dokabiliteetti-oma-nimi";
@@ -50,9 +51,25 @@ if (!deviceId) {
   localStorage.setItem(DEVICE_ID_AVAIN, deviceId);
 }
 
-export function laskeDokabiliteetti(hinta, koko, prosentti) {
+// Ajantasaiset Palpan panttimäärät (tarkistettu syyskuu 2026):
+// tölkki 0,15 € (kaikki koot), muovipullo koon mukaan, lasipullo 0,10 € (kaikki koot).
+export function laskePantti(pullotyyppi, kokoMl) {
+  if (pullotyyppi === "tolkki") return 0.15;
+  if (pullotyyppi === "lasipullo") return 0.10;
+  if (pullotyyppi === "muovipullo") {
+    if (!kokoMl || kokoMl <= 350) return 0.10;
+    if (kokoMl < 1000) return 0.20;
+    return 0.40;
+  }
+  return 0;
+}
+
+// Pantti on palautuksesta saatava summa, joten se ei ole osa juoman todellista
+// hintaa - vähennetään se ennen dokabiliteetin laskemista.
+export function laskeDokabiliteetti(hinta, koko, prosentti, pantti) {
+  var efektiivinenHinta = Math.max(hinta - (pantti || 0), 0.01);
   var puhdasAlkoholiMl = koko * (prosentti / 100);
-  return puhdasAlkoholiMl / hinta;
+  return puhdasAlkoholiMl / efektiivinenHinta;
 }
 
 export function pyorista(n, desimaalit) {
