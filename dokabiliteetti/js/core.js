@@ -35,7 +35,7 @@ enableIndexedDbPersistence(db).catch(function (err) {
 });
 
 export var KAUPAT = ["Alko", "Prisma", "S-market", "Alepa/Sale", "K-citymarket", "K-market", "K-supermarket", "Lidl", "Femma", "Viro", "Latvia", "Ulkomaat", "Muu"];
-export var JUOMATYYPIT = ["Olut", "Siideri", "Lonkero", "Viini", "Kuohuviini", "Väkevä", "Long drink", "Muu"];
+export var JUOMATYYPIT = ["Olut", "Siideri", "Lonkero", "Viini", "Kuohuviini", "Väkevä", "Shotti", "Long drink", "Muu"];
 export var YKSIKKOKERROIN = { l: 1, dl: 0.1, cl: 0.01 };
 
 export var OMA_NIMI_AVAIN = "dokabiliteetti-oma-nimi";
