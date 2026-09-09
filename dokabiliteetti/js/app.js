@@ -72,6 +72,16 @@ kielenVaihtuessa(function () {
   vaihdaValilehti(nykyinenValilehti, false);
 });
 
+// ---- AdSense ----
+var adIns = document.querySelector(".adsbygoogle");
+if (adIns && adIns.getAttribute("data-ad-slot") !== "TÄYTÄ_TÄHÄN" && adIns.getAttribute("data-ad-client") !== "ca-pub-TÄYTÄ_TÄHÄN") {
+  try {
+    (window.adsbygoogle = window.adsbygoogle || []).push({});
+  } catch (e) {
+    console.error("Mainoksen lataus epäonnistui", e);
+  }
+}
+
 // ---- Service worker ----
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function () {

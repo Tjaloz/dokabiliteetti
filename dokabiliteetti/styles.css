@@ -423,6 +423,24 @@ button.ghost {
   white-space: nowrap;
 }
 
+.muokkaus-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.muokkaus-form input,
+.muokkaus-form select {
+  height: 36px;
+  font-size: 14px;
+}
+
+.muokkaus-form button {
+  height: 36px;
+  font-size: 13px;
+}
+
 .empty-state {
   color: var(--text-muted);
   font-size: 14px;
