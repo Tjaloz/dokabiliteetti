@@ -64,27 +64,11 @@ var hintaindeksiKaupatEl = document.getElementById("hintaindeksi-kaupat");
 
 var aktiivisetSuodattimet = {};
 var aktiivisetTyyppisuodattimet = {};
-
-var JUOMATYYPPI_AVAIMET = {
-  "Olut": "tyyppi_olut",
-  "Siideri": "tyyppi_siideri",
-  "Lonkero": "tyyppi_lonkero",
-  "Viini": "tyyppi_viini",
-  "Kuohuviini": "tyyppi_kuohuviini",
-  "Väkevä": "tyyppi_vakeva",
-  "Long drink": "tyyppi_longdrink",
-  "Muu": "tyyppi_muu"
-};
-
-function tyyppiNimi(tyyppi) {
-  var avain = JUOMATYYPPI_AVAIMET[tyyppi];
-  return avain ? t(avain) : tyyppi;
-}
 var hakuTeksti = "";
 var naytaVainSuosikit = false;
 var avoinKommentit = {};
 var avoinHintaPaivitys = {};
-var avoinMuokkaus = {};
+var avoinKauppaMuutos = {};
 var avoinIlmoitus = {};
 var viimeisinNakyvatJuomat = [];
 
@@ -109,8 +93,7 @@ function renderaaSuodattimet() {
   var kaikkiKaupat = ["Kaikki"].concat(KAUPAT);
   suodattimetEl.innerHTML = kaikkiKaupat.map(function (k) {
     var aktiivinen = k === "Kaikki" ? eiYhtaanValittuna : !!aktiivisetSuodattimet[k];
-    var naytettavaNimi = k === "Kaikki" ? t("suodatin_kaikki") : k;
-    return '<button type="button" class="filter-chip' + (aktiivinen ? " active" : "") + '" data-kauppa="' + escapeHtml(k) + '">' + escapeHtml(naytettavaNimi) + "</button>";
+    return '<button type="button" class="filter-chip' + (aktiivinen ? " active" : "") + '" data-kauppa="' + escapeHtml(k) + '">' + escapeHtml(k) + "</button>";
   }).join("");
 
   Array.prototype.forEach.call(suodattimetEl.querySelectorAll(".filter-chip"), function (btn) {
@@ -135,8 +118,7 @@ function renderaaTyyppisuodattimet() {
   var kaikkiTyypit = ["Kaikki"].concat(JUOMATYYPIT);
   tyyppisuodattimetEl.innerHTML = kaikkiTyypit.map(function (tyyppi) {
     var aktiivinen = tyyppi === "Kaikki" ? eiYhtaanValittuna : !!aktiivisetTyyppisuodattimet[tyyppi];
-    var naytettavaNimi = tyyppi === "Kaikki" ? t("suodatin_kaikki") : tyyppiNimi(tyyppi);
-    return '<button type="button" class="filter-chip' + (aktiivinen ? " active" : "") + '" data-tyyppi="' + escapeHtml(tyyppi) + '">' + escapeHtml(naytettavaNimi) + "</button>";
+    return '<button type="button" class="filter-chip' + (aktiivinen ? " active" : "") + '" data-tyyppi="' + escapeHtml(tyyppi) + '">' + escapeHtml(tyyppi) + "</button>";
   }).join("");
 
   Array.prototype.forEach.call(tyyppisuodattimetEl.querySelectorAll(".filter-chip"), function (btn) {
@@ -188,7 +170,7 @@ function kortinHtml(j, onParas, suhde) {
   var onPeukutettu = !!peukutukset[j.id];
   var kommentitAuki = !!avoinKommentit[j.id];
   var hintaAuki = !!avoinHintaPaivitys[j.id];
-  var muokkausAuki = !!avoinMuokkaus[j.id];
+  var kauppaAuki = !!avoinKauppaMuutos[j.id];
   var ilmoitusAuki = !!avoinIlmoitus[j.id];
   var kommentit = j.kommentit || [];
   var peukut = j.peukut || 0;
@@ -203,7 +185,7 @@ function kortinHtml(j, onParas, suhde) {
     "</div>";
 
   html += '<div class="card-meta">' +
-    '<span class="card-details"><span class="card-store">' + escapeHtml(j.kauppa || "Muu") + '</span><span class="card-tyyppi">' + escapeHtml(tyyppiNimi(j.juomatyyppi || "Muu")) + "</span>" + pyorista(j.hinta, 2).toFixed(2) + " € · " + j.koko + " ml · " + j.prosentti + "%" + (j.pantti > 0 ? ' <span class="pantti-tag">+' + j.pantti.toFixed(2) + " € " + t("pantti_tag") + "</span>" : "") + "</span>" +
+    '<span class="card-details"><span class="card-store">' + escapeHtml(j.kauppa || "Muu") + '</span><span class="card-tyyppi">' + escapeHtml(j.juomatyyppi || "Muu") + "</span>" + pyorista(j.hinta, 2).toFixed(2) + " € · " + j.koko + " ml · " + j.prosentti + "%" + (j.pantti > 0 ? ' <span class="pantti-tag">+' + j.pantti.toFixed(2) + " € " + t("pantti_tag") + "</span>" : "") + "</span>" +
     '<span class="card-score">' + pyorista(j.dokabiliteetti, 2) + "</span>" +
     "</div>";
 
@@ -216,7 +198,7 @@ function kortinHtml(j, onParas, suhde) {
     '<button class="action-btn' + (onPeukutettu ? " active" : "") + '" data-action="peukku" data-id="' + j.id + '">' + peukkuTeksti + " (" + peukut + ")</button>" +
     '<button class="action-btn" data-action="toggle-kommentit" data-id="' + j.id + '">' + t("btn_kommentit") + " (" + kommentit.length + ")</button>" +
     '<button class="action-btn" data-action="toggle-hinta" data-id="' + j.id + '">' + t("btn_paivita_hinta") + "</button>" +
-    (onAdmin ? '<button class="action-btn" data-action="toggle-muokkaa" data-id="' + j.id + '">' + t("btn_muokkaa") + "</button>" : "") +
+    (onAdmin ? '<button class="action-btn" data-action="toggle-kauppa" data-id="' + j.id + '">' + t("btn_muuta_kauppa") + "</button>" : "") +
     '<button class="action-btn" data-action="jaa" data-id="' + j.id + '">' + t("btn_jaa") + "</button>" +
     '<button class="action-btn report-btn" data-action="toggle-ilmoitus" data-id="' + j.id + '">' + t("btn_ilmoita") + "</button>" +
     "</div>";
@@ -247,15 +229,9 @@ function kortinHtml(j, onParas, suhde) {
       "</form></div>";
   }
 
-  if (muokkausAuki && onAdmin) {
+  if (kauppaAuki && onAdmin) {
     html += '<div class="hinta-panel">' +
-      '<form class="muokkaus-form" data-action="paivita-tiedot" data-id="' + j.id + '">' +
-        '<input type="text" name="nimi" maxlength="60" value="' + escapeHtml(j.nimi) + '" aria-label="' + escapeHtml(t("label_nimi")) + '" required>' +
-        '<select name="juomatyyppi" aria-label="' + escapeHtml(t("label_juomatyyppi")) + '">' +
-          JUOMATYYPIT.map(function (ty) {
-            return '<option value="' + escapeHtml(ty) + '"' + (ty === j.juomatyyppi ? " selected" : "") + '>' + escapeHtml(tyyppiNimi(ty)) + "</option>";
-          }).join("") +
-        "</select>" +
+      '<form class="hinta-form" data-action="paivita-kauppa" data-id="' + j.id + '">' +
         '<select name="kauppa" aria-label="' + escapeHtml(t("label_kauppa")) + '">' +
           KAUPAT.map(function (k) {
             return '<option value="' + escapeHtml(k) + '"' + (k === j.kauppa ? " selected" : "") + '>' + escapeHtml(k) + "</option>";
@@ -772,9 +748,9 @@ tuloksetEl.addEventListener("click", function (e) {
   } else if (action === "toggle-hinta") {
     avoinHintaPaivitys[id] = !avoinHintaPaivitys[id];
     render();
-  } else if (action === "toggle-muokkaa") {
+  } else if (action === "toggle-kauppa") {
     if (!onAdmin) return;
-    avoinMuokkaus[id] = !avoinMuokkaus[id];
+    avoinKauppaMuutos[id] = !avoinKauppaMuutos[id];
     render();
   } else if (action === "toggle-ilmoitus") {
     avoinIlmoitus[id] = !avoinIlmoitus[id];
@@ -844,25 +820,19 @@ tuloksetEl.addEventListener("submit", function (e) {
       kirjaaVirhe("paivita-hinta", e2);
       alert(t("virhe_hinnan_paivitys"));
     });
-  } else if (action === "paivita-tiedot") {
+  } else if (action === "paivita-kauppa") {
     e.preventDefault();
     if (!onAdmin) return;
-    var nimiInput = form2.querySelector("input[name=nimi]");
-    var tyyppiSelect = form2.querySelector("select[name=juomatyyppi]");
     var kauppaSelect = form2.querySelector("select[name=kauppa]");
-    var uusiNimi = nimiInput.value.trim().slice(0, 60);
-    var uusiTyyppi = tyyppiSelect.value;
     var uusiKauppa = kauppaSelect.value;
-    if (!uusiNimi || JUOMATYYPIT.indexOf(uusiTyyppi) === -1 || KAUPAT.indexOf(uusiKauppa) === -1) return;
+    if (KAUPAT.indexOf(uusiKauppa) === -1) return;
     updateDoc(doc(db, "juomat", id), {
-      nimi: uusiNimi,
-      juomatyyppi: uusiTyyppi,
       kauppa: uusiKauppa
     }).then(function () {
-      delete avoinMuokkaus[id];
+      delete avoinKauppaMuutos[id];
     }).catch(function (e2) {
-      console.error("Tietojen päivitys epäonnistui", e2);
-      kirjaaVirhe("paivita-tiedot", e2);
+      console.error("Kaupan päivitys epäonnistui", e2);
+      kirjaaVirhe("paivita-kauppa", e2);
       alert(t("virhe_hinnan_paivitys"));
     });
   } else if (action === "ilmoita-juoma") {
