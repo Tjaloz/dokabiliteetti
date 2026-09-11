@@ -1,4 +1,5 @@
 User-agent: *
 Allow: /
+Disallow: /testit.html
 
 Sitemap: https://dokabiliteetti.site/sitemap.xml

@@ -1,4 +1,4 @@
-import { db, auth, adminUid, escapeHtml, pyorista, ilmoituksetQuery, virheetCol, virheetQuery } from "./core.js";
+import { db, auth, adminUid, escapeHtml, pyorista, ilmoituksetQuery, virheetCol, virheetQuery, analytiikkaCol } from "./core.js";
 import { t, kielenVaihtuessa } from "./i18n.js";
 import {
   doc,
@@ -6,7 +6,11 @@ import {
   updateDoc,
   arrayRemove,
   onSnapshot,
-  writeBatch
+  writeBatch,
+  query,
+  orderBy,
+  limit,
+  getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
   onAuthStateChanged,
@@ -116,7 +120,42 @@ function renderaaTilastot() {
     });
   }
 
+  html += '<div class="tilastot-otsikko">' + t("tilastot_kaytto") + "</div>";
+  html += '<div id="analytiikka-osio"><div class="tilastot-rivi"><span>' + t("tilastot_ladataan") + "</span></div></div>";
+
   tilastotPaneeliEl.innerHTML = html;
+  lataaAnalytiikka();
+}
+
+function lataaAnalytiikka() {
+  var kohde = document.getElementById("analytiikka-osio");
+  if (!kohde) return;
+  getDocs(query(analytiikkaCol, orderBy("__name__", "desc"), limit(14))).then(function (snapshot) {
+    var summat = { doka: 0, booli: 0, drinkki: 0, hinta: 0, lisays: 0, resepti: 0 };
+    var paivia = 0;
+    snapshot.forEach(function (d) {
+      paivia += 1;
+      var data = d.data();
+      Object.keys(summat).forEach(function (avain) {
+        summat[avain] += data[avain] || 0;
+      });
+    });
+    if (paivia === 0) {
+      kohde.innerHTML = '<div class="tilastot-rivi"><span>' + t("tilastot_ei_dataa") + "</span></div>";
+      return;
+    }
+    var html = '<div class="tilastot-rivi"><span>' + t("tilastot_ajanjakso") + "</span><strong>" + paivia + " " + t("tilastot_paivaa") + "</strong></div>";
+    html += '<div class="tilastot-rivi"><span>' + t("tab_doka") + "</span><strong>" + summat.doka + "</strong></div>";
+    html += '<div class="tilastot-rivi"><span>' + t("tab_booli") + "</span><strong>" + summat.booli + "</strong></div>";
+    html += '<div class="tilastot-rivi"><span>' + t("tab_drinkki") + "</span><strong>" + summat.drinkki + "</strong></div>";
+    html += '<div class="tilastot-rivi"><span>' + t("tab_hinta") + "</span><strong>" + summat.hinta + "</strong></div>";
+    html += '<div class="tilastot-rivi"><span>' + t("tilastot_uusia_juomia") + "</span><strong>" + summat.lisays + "</strong></div>";
+    html += '<div class="tilastot-rivi"><span>' + t("tilastot_uusia_resepteja") + "</span><strong>" + summat.resepti + "</strong></div>";
+    kohde.innerHTML = html;
+  }).catch(function (e) {
+    console.error("Analytiikan haku epäonnistui", e);
+    kohde.innerHTML = '<div class="tilastot-rivi"><span>' + t("tilastot_ei_dataa") + "</span></div>";
+  });
 }
 
 tilastotToggle.addEventListener("click", function () {

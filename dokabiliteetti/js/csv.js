@@ -5,7 +5,7 @@ import { t } from "./i18n.js";
 // yhteen sarakkeeseen suoraan Excelissä ilman manuaalista tuontia.
 var EROTIN = ";";
 
-function csvSolu(arvo) {
+export function csvSolu(arvo) {
   var s = String(arvo == null ? "" : arvo);
   if (s.indexOf(EROTIN) !== -1 || s.indexOf('"') !== -1 || s.indexOf("\n") !== -1) {
     s = '"' + s.replace(/"/g, '""') + '"';

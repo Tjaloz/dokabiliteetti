@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Testit &ndash; Dokabiliteetti (ei julkinen sivu)</title>
+<meta name="robots" content="noindex, nofollow">
+<style>
+  body { font-family: monospace; background: #111; color: #eee; padding: 1rem; font-size: 14px; }
+  .ok { color: #4ade80; }
+  .fail { color: #f87171; font-weight: bold; }
+  .yhteenveto { margin-top: 1rem; padding: 0.75rem; border: 1px solid #444; border-radius: 8px; }
+  h1 { font-size: 16px; }
+</style>
+</head>
+<body>
+
+<h1>Dokabiliteetti &ndash; regressiotestit ydinlaskennalle</h1>
+<p>Tämä sivu ei ole tarkoitettu käyttäjille &ndash; se ajaa muutaman perustestin laskentafunktioille suoraan selaimessa, jotta bugit huomataan ennen käyttäjiä. Ei vaadi build-työkaluja, ajetaan avaamalla tämä sivu suoraan.</p>
+
+<div id="tulokset">Ajetaan testejä…</div>
+
+<script type="module">
+import { laskeDokabiliteetti, laskePantti } from "./js/core.js";
+import { csvSolu } from "./js/csv.js";
+
+var tulosEl = document.getElementById("tulokset");
+var testit = [];
+var lapi = 0;
+var epaonnistui = 0;
+
+function likimain(a, b, tarkkuus) {
+  return Math.abs(a - b) < (tarkkuus || 0.01);
+}
+
+function testaa(nimi, fn) {
+  try {
+    var tulos = fn();
+    if (tulos === true) {
+      testit.push({ nimi: nimi, ok: true });
+      lapi++;
+    } else {
+      testit.push({ nimi: nimi, ok: false, virhe: "väite epätosi: " + tulos });
+      epaonnistui++;
+    }
+  } catch (e) {
+    testit.push({ nimi: nimi, ok: false, virhe: e.message });
+    epaonnistui++;
+  }
+}
+
+// ---- laskeDokabiliteetti ----
+testaa("Perus dokabiliteetti ilman panttia (330ml, 4.6%, 2.20€)", function () {
+  var tulos = laskeDokabiliteetti(2.20, 330, 4.6);
+  return likimain(tulos, 6.9, 0.05) || tulos;
+});
+
+testaa("Pantti vähennetään hinnasta ennen laskentaa (330ml, 4.6%, 2.20€, pantti 0.15€)", function () {
+  var ilmanPanttia = laskeDokabiliteetti(2.20, 330, 4.6, 0);
+  var panttiKanssa = laskeDokabiliteetti(2.20, 330, 4.6, 0.15);
+  return panttiKanssa > ilmanPanttia || "pantillinen dokabiliteetti (" + panttiKanssa + ") ei ole suurempi kuin ilman (" + ilmanPanttia + ")";
+});
+
+testaa("Dokabiliteetti ei mene äärettömäksi vaikka pantti = hinta", function () {
+  var tulos = laskeDokabiliteetti(0.15, 330, 4.6, 0.15);
+  return (isFinite(tulos) && tulos > 0) || "tulos ei ole äärellinen positiivinen luku: " + tulos;
+});
+
+testaa("Isompi alkoholiprosentti kasvattaa dokabiliteettia (muut muuttujat samat)", function () {
+  var heikko = laskeDokabiliteetti(2.20, 330, 4.6);
+  var vahva = laskeDokabiliteetti(2.20, 330, 12);
+  return vahva > heikko || "vahvempi juoma ei saanut suurempaa dokabiliteettia";
+});
+
+// ---- laskePantti ----
+testaa("Tölkin pantti on aina 0.15€ koosta riippumatta", function () {
+  return (laskePantti("tolkki", 330) === 0.15 && laskePantti("tolkki", 1500) === 0.15) || "tölkin pantti vaihteli koon mukaan";
+});
+
+testaa("Lasipullon pantti on aina 0.10€ koosta riippumatta", function () {
+  return (laskePantti("lasipullo", 330) === 0.10 && laskePantti("lasipullo", 1000) === 0.10) || "lasipullon pantti vaihteli koon mukaan";
+});
+
+testaa("Muovipullon pantti kasvaa koon mukaan (0.10 / 0.20 / 0.40)", function () {
+  var pieni = laskePantti("muovipullo", 330);
+  var keski = laskePantti("muovipullo", 500);
+  var iso = laskePantti("muovipullo", 1500);
+  return (pieni === 0.10 && keski === 0.20 && iso === 0.40) || ("sai " + pieni + " / " + keski + " / " + iso);
+});
+
+testaa("Ei panttia -tyyppi palauttaa aina 0", function () {
+  return laskePantti("ei_panttia", 330) === 0 || "palautti nollasta poikkeavan arvon";
+});
+
+// ---- csvSolu ----
+testaa("CSV-solu ei lisää lainausmerkkejä tavalliselle tekstille", function () {
+  return csvSolu("Karhu III") === "Karhu III" || "sai: " + csvSolu("Karhu III");
+});
+
+testaa("CSV-solu suojaa puolipisteen sisältävän arvon lainausmerkeillä", function () {
+  var tulos = csvSolu("Alko; Prisma");
+  return tulos === '"Alko; Prisma"' || "sai: " + tulos;
+});
+
+testaa("CSV-solu tuplaa lainausmerkit oikein", function () {
+  var tulos = csvSolu('Sano "hei"');
+  return tulos === '"Sano ""hei"""' || "sai: " + tulos;
+});
+
+testaa("CSV-solu käsittelee null/undefined tyhjänä merkkijonona", function () {
+  return csvSolu(null) === "" && csvSolu(undefined) === "";
+});
+
+// ---- Tulosten näyttö ----
+var html = testit.map(function (t) {
+  return '<div class="' + (t.ok ? "ok" : "fail") + '">' + (t.ok ? "✓" : "✗") + " " + t.nimi + (t.ok ? "" : " — " + t.virhe) + "</div>";
+}).join("");
+
+html += '<div class="yhteenveto">' + lapi + " / " + testit.length + " testiä läpi" + (epaonnistui > 0 ? '<span class="fail"> — ' + epaonnistui + " EPÄONNISTUI</span>" : '<span class="ok"> — kaikki OK</span>') + "</div>";
+
+tulosEl.innerHTML = html;
+document.title = (epaonnistui > 0 ? "❌ " : "✅ ") + lapi + "/" + testit.length + " – Testit";
+</script>
+
+</body>
+</html>

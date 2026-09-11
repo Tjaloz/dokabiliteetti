@@ -5,6 +5,8 @@ import {
   collection,
   addDoc,
   doc,
+  setDoc,
+  increment,
   query,
   orderBy,
   serverTimestamp,
@@ -28,6 +30,20 @@ export var drinkkireseptitQuery = query(drinkkireseptitCol, orderBy("luotu", "de
 export var ilmoituksetCol = collection(db, "ilmoitukset");
 export var ilmoituksetQuery = query(ilmoituksetCol, orderBy("luotu", "desc"));
 export var virheetCol = collection(db, "virheet");
+export var analytiikkaCol = collection(db, "analytiikka");
+
+// Täysin anonyymi, päiväkohtainen laskuri - ei deviceId:tä, ei mitään
+// yksilöivää tietoa, vain aggregoitu lukumäärä per tapahtumatyyppi per päivä.
+var SALLITUT_ANALYTIIKKA_KENTAT = ["doka", "booli", "drinkki", "hinta", "lisays", "resepti"];
+export function kirjaaAnalytiikka(kentta) {
+  if (SALLITUT_ANALYTIIKKA_KENTAT.indexOf(kentta) === -1) return;
+  var paiva = new Date().toISOString().slice(0, 10);
+  var muutos = {};
+  muutos[kentta] = increment(1);
+  setDoc(doc(analytiikkaCol, paiva), muutos, { merge: true }).catch(function (e) {
+    console.warn("Analytiikan kirjaus epäonnistui", e);
+  });
+}
 export var virheetQuery = query(virheetCol, orderBy("luotu", "desc"));
 
 enableIndexedDbPersistence(db).catch(function (err) {

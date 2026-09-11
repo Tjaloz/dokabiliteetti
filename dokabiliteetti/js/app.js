@@ -1,4 +1,4 @@
-import "./core.js";
+import { kirjaaAnalytiikka } from "./core.js";
 import { t, kielenVaihtuessa, asetaKieli, nykyinenKieli, soveltaaStaattinenKaannos } from "./i18n.js";
 import "./admin.js";
 import "./juomat.js";
@@ -36,6 +36,7 @@ var nykyinenValilehti = "doka";
 function vaihdaValilehti(tab, paivitaHash) {
   if (!TAB_AVAIMET[tab]) tab = "doka";
   nykyinenValilehti = tab;
+  kirjaaAnalytiikka(tab);
 
   Array.prototype.forEach.call(tabBtns, function (b) {
     var onAktiivinen = b.getAttribute("data-tab") === tab;

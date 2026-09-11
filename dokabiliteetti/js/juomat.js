@@ -1,7 +1,7 @@
 import {
   db, juomatCol, juomatQuery, KAUPAT, JUOMATYYPIT, deviceId,
   laskeDokabiliteetti, laskePantti, pyorista, escapeHtml, muotoilePvm, sparklineSvg,
-  lataaLista, tallennaLista, laheteIlmoitus, kirjaaVirhe,
+  lataaLista, tallennaLista, laheteIlmoitus, kirjaaVirhe, kirjaaAnalytiikka,
   OMA_NIMI_AVAIN, SUOSIKIT_AVAIN, PEUKUTUKSET_AVAIN
 } from "./core.js";
 import { t, kielenVaihtuessa } from "./i18n.js";
@@ -577,6 +577,7 @@ function luoUusiJuoma(tiedot) {
   var oliOffline = !navigator.onLine;
 
   var commitPromise = batch.commit().then(function () {
+    kirjaaAnalytiikka("lisays");
     if (!oliOffline) {
       nimiEl.value = "";
       hintaEl.value = "";

@@ -1,6 +1,6 @@
 import {
   db, reseptitCol, reseptitQuery, deviceId, YKSIKKOKERROIN,
-  pyorista, escapeHtml, kirjaaVirhe
+  pyorista, escapeHtml, kirjaaVirhe, kirjaaAnalytiikka
 } from "./core.js";
 import { t, kielenVaihtuessa } from "./i18n.js";
 import {
@@ -262,6 +262,7 @@ tallennaReseptiBtn.addEventListener("click", function () {
   batch.set(rateRef, { viimeisin: serverTimestamp() });
 
   batch.commit().then(function () {
+    kirjaaAnalytiikka("resepti");
     reseptiNimiEl.value = "";
     lisaaineetEl.value = "";
   }).catch(function (e) {
