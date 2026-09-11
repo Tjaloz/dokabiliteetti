@@ -1040,3 +1040,39 @@ footer p {
   color: var(--text-muted);
   font-size: 11px;
 }
+
+.tuki-osio {
+  max-width: 280px;
+  margin: 1rem auto 0;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  text-align: center;
+}
+
+.tuki-osio p {
+  font-size: 12px !important;
+  margin: 2px 0 !important;
+}
+
+.tuki-otsikko {
+  font-weight: 600;
+  color: var(--text-primary) !important;
+  font-size: 13px !important;
+}
+
+.tuki-numero {
+  font-size: 15px !important;
+  font-weight: 700;
+  color: var(--accent-text) !important;
+  letter-spacing: 0.02em;
+  margin-top: 4px !important;
+}
+
+.resepti-otsikko {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 1.1rem 0 0.4rem;
+  color: var(--text-primary);
+}
