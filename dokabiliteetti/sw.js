@@ -1,8 +1,9 @@
-var CACHE_NAME = "dokabiliteetti-v29";
+var CACHE_NAME = "dokabiliteetti-v31";
 var ASSETS = [
   "./",
   "./index.html",
   "./tietosuoja.html",
+  "./opas.html",
   "./styles.css",
   "./js/app.js",
   "./js/core.js",
